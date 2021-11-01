@@ -17,6 +17,11 @@ class Organization(models.Model):
     coincapmarket_url = models.URLField(max_length=254, blank=True, default='')
 
 
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
+
+
 class BlockChain(models.Model):
     abbreviation = models.CharField(max_length=4, blank=False)
     canary_beta_public_key = models.CharField(max_length=64, blank=False)
