@@ -2,8 +2,10 @@ from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 from api.permissions import IsOwner
+from api.serializers import CustomTokenObtainPairSerializer
 
 
 class APIRootView(APIView):
@@ -18,6 +20,10 @@ class APIRootView(APIView):
             'token/refresh': reverse('token_refresh', request=request, format=format),
             'token/verify': reverse('token_verify', request=request, format=format),
         })
+
+
+class EmailTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
 
 
 class HelloView(APIView):
