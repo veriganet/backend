@@ -2,6 +2,12 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.contrib.auth.models import AbstractUser
 
+# Make email unique field
+User._meta.get_field('email')._unique = True
+# make USERNAME_FIELD email
+User.USERNAME_FIELD = 'email'
+User.REQUIRED_FIELDS = []
+
 
 class Organization(models.Model):
     address = models.TextField(max_length=2048, blank=True, default='')
