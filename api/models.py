@@ -6,6 +6,7 @@ from django.contrib.auth.models import AbstractUser
 User._meta.get_field('email')._unique = True
 # make USERNAME_FIELD email
 User.USERNAME_FIELD = 'email'
+# remove REQUIRED_FIELDS
 User.REQUIRED_FIELDS = []
 
 

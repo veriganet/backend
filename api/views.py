@@ -23,6 +23,9 @@ class APIRootView(APIView):
 
 
 class EmailTokenObtainPairView(TokenObtainPairView):
+    """
+    Creates JWT token pair with email authantication
+    """
     serializer_class = CustomTokenObtainPairSerializer
 
 
