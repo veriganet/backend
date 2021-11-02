@@ -5,7 +5,7 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, \
     IsAuthenticatedOrReadOnly
 from rest_framework_simplejwt.views import TokenObtainPairView
-from rest_framework import generics
+from rest_framework import generics, viewsets
 
 from api.permissions import IsOwner
 from api.serializers import CustomTokenObtainPairSerializer, UserSerializer
@@ -55,3 +55,14 @@ class UserDetail(generics.RetrieveAPIView):
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated, IsAdminUser]
 
+
+class UserViewSet(viewsets.ModelViewSet):
+    """
+    list, create, retreive, update and destroy actoins for users
+
+    for user details:
+    users/<pk>/
+    """
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated, IsAdminUser]
