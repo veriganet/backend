@@ -1,5 +1,6 @@
 from rest_framework_simplejwt.serializers import TokenObtainSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework import serializers
 from django.contrib.auth.models import User
 
 
@@ -27,3 +28,19 @@ class CustomTokenObtainPairSerializer(EmailTokenObtainSerializer):
         data["access"] = str(refresh.access_token)
 
         return data
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id',
+                  'email',
+                  'first_name',
+                  'last_name',
+                  'groups',
+                  'user_permissions',
+                  'is_staff',
+                  'is_active',
+                  'is_superuser',
+                  'last_login',
+                  'date_joined']
