@@ -44,3 +44,35 @@ class UserSerializer(serializers.ModelSerializer):
                   'is_superuser',
                   'last_login',
                   'date_joined']
+
+
+class RegisterUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id',
+                  'email',
+                  'password',
+                  'first_name',
+                  'last_name',
+                  'date_joined']
+
+
+class RegisterSerializer(serializers.ModelSerializer):
+    """
+    Serializer for user registration
+    """
+    class Meta:
+        model = User
+        fields = ('id', 'email', 'password',
+                  'first_name', 'last_name')
+        extra_kwargs = {'password': {'write_only': True}}
+
+    def create(self, validated_data):
+        user = User.objects.create_user(
+            first_name=validated_data['first_name'],
+            last_name=validated_data['last_name'],
+            email=validated_data['email'],
+            username=validated_data['email'],
+            password=validated_data['password']
+        )
+        return user
