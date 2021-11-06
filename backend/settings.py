@@ -136,6 +136,10 @@ AUTHENTICATION_BACKENDS = [
      'django.contrib.auth.backends.ModelBackend'
 ]
 
+SIMPLE_JWT = {
+    'USER_ID_FIELD': 'email'
+}
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -148,7 +152,7 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 20,
 }
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_USE_TLS = False
 EMAIL_HOST = '127.0.0.1'
 EMAIL_PORT = 1025

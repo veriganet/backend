@@ -1,14 +1,20 @@
+import jwt
 from django.contrib.auth.models import User
+from django.contrib.sites.shortcuts import get_current_site
+from django.conf import settings
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from rest_framework_simplejwt.views import TokenObtainPairView
-from rest_framework import generics, viewsets
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework import generics, viewsets, status
 
 from api.permissions import IsOwner
+from api.utils import Util
+from api.models import Profile
 from api.serializers import CustomTokenObtainPairSerializer, UserSerializer, \
-    RegisterSerializer, RegisterUserSerializer
+    RegisterSerializer, RegisterUserSerializer, ProfileSerializer
 
 
 class APIRootView(APIView):
@@ -24,6 +30,7 @@ class APIRootView(APIView):
             'token/refresh': reverse('token_refresh', request=request, format=format),
             'token/verify': reverse('token_verify', request=request, format=format),
             'users': reverse('user_list', request=request, format=format),
+            'email/verify': reverse('email_verify', request=request, format=format),
         })
 
 
@@ -46,11 +53,23 @@ class UserViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, IsAdminUser]
 
 
+class ProfileViewSet(viewsets.ModelViewSet):
+    """
+    List, retreive, update actions for user profiles
+    """
+    queryset = Profile.objects.all().order_by('user_id')
+    serializer_class = ProfileSerializer
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+
 class RegisterUserViewSet(viewsets.ModelViewSet):
     """
     Register new user
+
     :email
     :password
+    :first_name
+    :last_name
     """
     serializer_class = RegisterSerializer
     permission_classes = [AllowAny]
@@ -59,7 +78,50 @@ class RegisterUserViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
+
+        user = User.objects.get(email=user.email)
+        token = str(RefreshToken.for_user(user).access_token)
+
+        current_site = get_current_site(request).domain
+        relative_link = reverse('email_verify')
+        absurl = 'http://' + current_site + relative_link + "?token=" + token
+
+        email_body = '''Hello {first_name} {last_name}\n
+Please verify your email address with following link:\n
+{absurl}''' \
+        .format(absurl=absurl,
+                first_name=user.first_name,
+                last_name=user.last_name)
+
+        data = {
+            'email_body': email_body,
+            'email_subject': 'Verify Your Email',
+            'email_receiver': user.email
+        }
+
+        Util.send_email(data=data)
+
         return Response({
             "user": RegisterUserSerializer(
                 user, context=self.get_serializer_context()).data
-        })
+        }, status=status.HTTP_201_CREATED)
+
+
+class VerifyEmailViewSet(viewsets.GenericViewSet):
+    permission_classes = [AllowAny]
+
+    def update(self, request):
+        token = request.GET.get('token')
+
+        try:
+            payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+            user = User.objects.get(email=payload['user_id'])
+            if not user.profile.is_email_verified:
+                user.profile.is_email_verified = True
+                user.save()
+            return Response({'email': 'Verified'}, status=status.HTTP_200_OK)
+        except jwt.ExpiredSignatureError as identifier:
+            return Response({'error': 'Activation Link Expired'}, status=status.HTTP_400_BAD_REQUEST)
+        except jwt.exceptions.DecodeError as identifier:
+            return Response({'error': 'Invalid / Missing Token'}, status=status.HTTP_400_BAD_REQUEST)
+

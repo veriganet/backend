@@ -3,6 +3,9 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import serializers
 from django.contrib.auth.models import User
 
+from api.models import Profile
+from api.views import Profile
+
 
 class EmailTokenObtainSerializer(TokenObtainSerializer):
     """
@@ -33,17 +36,13 @@ class CustomTokenObtainPairSerializer(EmailTokenObtainSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id',
-                  'email',
-                  'first_name',
-                  'last_name',
-                  'groups',
-                  'user_permissions',
-                  'is_staff',
-                  'is_active',
-                  'is_superuser',
-                  'last_login',
-                  'date_joined']
+        fields = '__all__'
+
+
+class ProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
+        fields = '__all__'
 
 
 class RegisterUserSerializer(serializers.ModelSerializer):
@@ -54,6 +53,7 @@ class RegisterUserSerializer(serializers.ModelSerializer):
                   'password',
                   'first_name',
                   'last_name',
+                  'is_active',
                   'date_joined']
 
 
@@ -73,6 +73,6 @@ class RegisterSerializer(serializers.ModelSerializer):
             last_name=validated_data['last_name'],
             email=validated_data['email'],
             username=validated_data['email'],
-            password=validated_data['password']
+            password=validated_data['password'],
         )
         return user
