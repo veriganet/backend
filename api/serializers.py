@@ -3,7 +3,6 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import serializers
 from django.contrib.auth.models import User
 
-from api.models import Profile
 from api.views import Profile
 
 
@@ -33,15 +32,33 @@ class CustomTokenObtainPairSerializer(EmailTokenObtainSerializer):
         return data
 
 
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = '__all__'
-
-
 class ProfileSerializer(serializers.ModelSerializer):
+    """
+    User profile serializer for user profile detail
+    """
+
     class Meta:
         model = Profile
+        fields = '__all__'
+
+    def create(self, validated_data):
+        """
+        Overriding the default create method of the Model serializer.
+        :param validated_data: data containing all the details of user
+        :return: returns a successfully created student record
+        """
+        user_data = validated_data.pop('user')
+        user = UserSerializer.create(UserSerializer(), validated_data=user_data)
+        profile, created = Profile.objects.update_or_create(user=user)
+
+        return profile
+
+
+class UserSerializer(serializers.ModelSerializer):
+    profile = ProfileSerializer(required=True)
+
+    class Meta:
+        model = User
         fields = '__all__'
 
 

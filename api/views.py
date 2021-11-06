@@ -30,7 +30,9 @@ class APIRootView(APIView):
             'token/refresh': reverse('token_refresh', request=request, format=format),
             'token/verify': reverse('token_verify', request=request, format=format),
             'users': reverse('user_list', request=request, format=format),
+            'users/profiles': reverse('user_profile', request=request, format=format),
             'email/verify': reverse('email_verify', request=request, format=format),
+            'email/verify-send': reverse('email_verify_send', request=request, format=format),
         })
 
 
@@ -57,7 +59,7 @@ class ProfileViewSet(viewsets.ModelViewSet):
     """
     List, retreive, update actions for user profiles
     """
-    queryset = Profile.objects.all().order_by('user_id')
+    queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
     permission_classes = [IsAuthenticated, IsAdminUser]
 
@@ -107,7 +109,46 @@ Please verify your email address with following link:\n
         }, status=status.HTTP_201_CREATED)
 
 
-class VerifyEmailViewSet(viewsets.GenericViewSet):
+class EmailVerifySendViewSet(viewsets.GenericViewSet):
+    permission_classes = [IsAuthenticated]
+
+    def create(self, request, *args,**kwargs):
+        user_email = request.GET.get('email')
+
+        if not user_email:
+            return Response({"error": 'Verification Email NOT Sent'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        else:
+            # get user by email parameter
+            user = User.objects.get(email=user_email)
+
+            # check if user email verified
+            if not user.profile.is_email_verified:
+                token = str(RefreshToken.for_user(user).access_token)
+
+                current_site = get_current_site(request).domain
+                relative_link = reverse('email_verify')
+                absurl = 'http://' + current_site + relative_link + "?token=" + token
+
+                email_body = '''Hello {first_name} {last_name}\n
+                Please verify your email address with following link:\n
+                {absurl}''' \
+                    .format(absurl=absurl,
+                            first_name=user.first_name,
+                            last_name=user.last_name)
+
+                data = {
+                    'email_body': email_body,
+                    'email_subject': 'Verify Your Email',
+                    'email_receiver': user.email
+                }
+
+                Util.send_email(data=data)
+            return Response({"info": 'Verification Email Sent'},
+                            status=status.HTTP_200_OK)
+
+
+class EmailVerifyViewSet(viewsets.GenericViewSet):
     permission_classes = [AllowAny]
 
     def update(self, request):
@@ -119,7 +160,7 @@ class VerifyEmailViewSet(viewsets.GenericViewSet):
             if not user.profile.is_email_verified:
                 user.profile.is_email_verified = True
                 user.save()
-            return Response({'email': 'Verified'}, status=status.HTTP_200_OK)
+            return Response({'info': 'Verified'}, status=status.HTTP_200_OK)
         except jwt.ExpiredSignatureError as identifier:
             return Response({'error': 'Activation Link Expired'}, status=status.HTTP_400_BAD_REQUEST)
         except jwt.exceptions.DecodeError as identifier:
