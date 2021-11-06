@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.sites',
     'rest_framework',
+    'django_rest_passwordreset',
     'api.apps.ApiConfig',
 ]
 

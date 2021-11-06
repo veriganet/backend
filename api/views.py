@@ -25,14 +25,17 @@ class APIRootView(APIView):
 
     def get(self, request, format=None):
         return Response({
+            'email/verify': reverse('email_verify', request=request, format=format),
+            'email/verify-send': reverse('email_verify_send', request=request, format=format),
             'register': reverse('register_user', request=request, format=format),
             'token': reverse('token_obtain_pair', request=request, format=format),
             'token/refresh': reverse('token_refresh', request=request, format=format),
             'token/verify': reverse('token_verify', request=request, format=format),
             'users': reverse('user_list', request=request, format=format),
+            'users/password-reset': reverse('user_password_reset', request=request, format=format),
+            'users/password-reset/confirm': reverse('user_password_reset_confirm', request=request, format=format),
+            'users/password-reset/validate': reverse('user_password_reset_validate', request=request, format=format),
             'users/profiles': reverse('user_profile', request=request, format=format),
-            'email/verify': reverse('email_verify', request=request, format=format),
-            'email/verify-send': reverse('email_verify_send', request=request, format=format),
         })
 
 
