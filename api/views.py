@@ -9,6 +9,7 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import generics, viewsets, status
+from templated_email import send_templated_mail
 
 from api.permissions import IsOwner
 from api.utils import Util
@@ -89,22 +90,17 @@ class RegisterUserViewSet(viewsets.ModelViewSet):
 
         current_site = get_current_site(request).domain
         relative_link = reverse('email_verify')
-        absurl = 'http://' + current_site + relative_link + "?token=" + token
+        verify_url = 'https://' + current_site + relative_link + "?token=" + token
 
-        email_body = '''Hello {first_name} {last_name}\n
-Please verify your email address with following link:\n
-{absurl}''' \
-        .format(absurl=absurl,
-                first_name=user.first_name,
-                last_name=user.last_name)
-
-        data = {
-            'email_body': email_body,
-            'email_subject': 'Verify Your Email',
-            'email_receiver': user.email
-        }
-
-        Util.send_email(data=data)
+        send_templated_mail(
+            template_name='welcome',
+            from_email='welcome@'+current_site,
+            recipient_list=[user.email],
+            context={
+                'full_name': user.get_full_name(),
+                'verify_url': verify_url,
+            }
+        )
 
         return Response({
             "user": RegisterUserSerializer(
