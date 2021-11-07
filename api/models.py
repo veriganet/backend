@@ -43,17 +43,6 @@ class Profile(models.Model):
         ordering = ['id']
 
 
-@receiver(post_save, sender=User)
-def create_user_profile(sender, instance, created, **kwargs):
-    if created:
-        Profile.objects.create(user=instance)
-
-
-@receiver(post_save, sender=User)
-def save_user_profile(sender, instance, **kwargs):
-    instance.profile.save()
-
-
 class BlockChain(models.Model):
     abbreviation = models.CharField(max_length=4, blank=False)
     canary_beta_public_key = models.CharField(max_length=64, blank=False)

@@ -1,4 +1,4 @@
-{% block subject %}Welcome to VerigaNet{% endblock %}
+{% block subject %}VerigaNet Verify Your Email{% endblock %}
 {% block html %}
   <p>Hello {{ full_name }},</p>
 
@@ -6,6 +6,4 @@
   <p>
       <a href="{{ verify_url }}">{{ verify_url }}</a>
   </p>
-
-  <p>Thank you for signing up for our services.</p>
 {% endblock %}

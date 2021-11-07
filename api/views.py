@@ -12,7 +12,6 @@ from rest_framework import generics, viewsets, status
 from templated_email import send_templated_mail
 
 from api.permissions import IsOwner
-from api.utils import Util
 from api.models import Profile
 from api.serializers import CustomTokenObtainPairSerializer, UserSerializer, \
     RegisterSerializer, RegisterUserSerializer, ProfileSerializer
@@ -89,8 +88,7 @@ class RegisterUserViewSet(viewsets.ModelViewSet):
         token = str(RefreshToken.for_user(user).access_token)
 
         current_site = get_current_site(request).domain
-        relative_link = reverse('email_verify')
-        verify_url = 'https://' + current_site + relative_link + "?token=" + token
+        verify_url = request.build_absolute_uri(reverse('user_password_reset_confirm'))+"?token=" + token
 
         send_templated_mail(
             template_name='welcome',
@@ -115,7 +113,7 @@ class EmailVerifySendViewSet(viewsets.GenericViewSet):
         user_email = request.GET.get('email')
 
         if not user_email:
-            return Response({"error": 'Verification Email NOT Sent'},
+            return Response({"error": 'Verification email NOT sent'},
                             status=status.HTTP_400_BAD_REQUEST)
         else:
             # get user by email parameter
@@ -126,24 +124,19 @@ class EmailVerifySendViewSet(viewsets.GenericViewSet):
                 token = str(RefreshToken.for_user(user).access_token)
 
                 current_site = get_current_site(request).domain
-                relative_link = reverse('email_verify')
-                absurl = 'http://' + current_site + relative_link + "?token=" + token
+                verify_url = request.build_absolute_uri(reverse('email_verify')) + "?token=" + token
 
-                email_body = '''Hello {first_name} {last_name}\n
-                Please verify your email address with following link:\n
-                {absurl}''' \
-                    .format(absurl=absurl,
-                            first_name=user.first_name,
-                            last_name=user.last_name)
+                send_templated_mail(
+                    template_name='email_verify',
+                    from_email='verify@' + current_site,
+                    recipient_list=[user.email],
+                    context={
+                        'full_name': user.get_full_name(),
+                        'verify_url': verify_url,
+                    }
+                )
 
-                data = {
-                    'email_body': email_body,
-                    'email_subject': 'Verify Your Email',
-                    'email_receiver': user.email
-                }
-
-                Util.send_email(data=data)
-            return Response({"info": 'Verification Email Sent'},
+            return Response({"status": 'Verification email sent'},
                             status=status.HTTP_200_OK)
 
 
@@ -159,7 +152,7 @@ class EmailVerifyViewSet(viewsets.GenericViewSet):
             if not user.profile.is_email_verified:
                 user.profile.is_email_verified = True
                 user.save()
-            return Response({'info': 'Verified'}, status=status.HTTP_200_OK)
+            return Response({'status': 'Verified'}, status=status.HTTP_200_OK)
         except jwt.ExpiredSignatureError as identifier:
             return Response({'error': 'Activation Link Expired'}, status=status.HTTP_400_BAD_REQUEST)
         except jwt.exceptions.DecodeError as identifier:
