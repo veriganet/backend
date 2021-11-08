@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.sites',
     'rest_framework',
+    'django_rest_passwordreset',
     'api.apps.ApiConfig',
 ]
 
@@ -136,19 +137,30 @@ AUTHENTICATION_BACKENDS = [
      'django.contrib.auth.backends.ModelBackend'
 ]
 
+SIMPLE_JWT = {
+    'USER_ID_FIELD': 'email'
+}
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10,
+    'PAGE_SIZE': 20,
 }
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_USE_TLS = False
 EMAIL_HOST = '127.0.0.1'
 EMAIL_PORT = 1025
 EMAIL_HOST_USER = ''
 EMAIL_HOST_PASSWORD = ''
+
+TEMPLATED_EMAIL_BACKEND = 'templated_email.backends.vanilla_django.TemplateBackend'
+TEMPLATED_EMAIL_AUTO_PLAIN = True
 
 SITE_ID = 1

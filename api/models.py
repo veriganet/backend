@@ -2,12 +2,18 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.contrib.auth.models import AbstractUser
 
-# Make email unique field
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+
+# make email unique field
 User._meta.get_field('email')._unique = True
+# make username field None
+User.username = None
 # make USERNAME_FIELD email
 User.USERNAME_FIELD = 'email'
 # remove REQUIRED_FIELDS
-User.REQUIRED_FIELDS = []
+User.REQUIRED_FIELDS = ['username']
 
 
 class Organization(models.Model):
@@ -23,10 +29,18 @@ class Organization(models.Model):
     discord_url = models.URLField(max_length=254, blank=True, default='')
     coincapmarket_url = models.URLField(max_length=254, blank=True, default='')
 
+    class Meta:
+        ordering = ['id']
+
 
 class Profile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    is_email_verified = models.BooleanField(default=False, blank=False)
+    email_verify_token = models.CharField(max_length=256, blank=True, default='')
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, null=True)
+
+    class Meta:
+        ordering = ['id']
 
 
 class BlockChain(models.Model):

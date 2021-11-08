@@ -1,0 +1,9 @@
+{% block subject %}VerigaNet Verify Your Email{% endblock %}
+{% block html %}
+  <p>Hello {{ full_name }},</p>
+
+  <p>Please verify your email address by clicking following url:</p>
+  <p>
+      <a href="{{ verify_url }}">{{ verify_url }}</a>
+  </p>
+{% endblock %}
