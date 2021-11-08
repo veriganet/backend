@@ -4,7 +4,16 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 
 from api.views import Profile
-from api.models import Organization
+from api.models import Organization, BlockChain
+
+
+class BlockChainSerializer(serializers.ModelSerializer):
+    """
+    Serializer for BolockChain model
+    """
+    class Meta:
+        model = BlockChain
+        fields = '__all__'
 
 
 class EmailTokenObtainSerializer(TokenObtainSerializer):
@@ -35,7 +44,7 @@ class CustomTokenObtainPairSerializer(EmailTokenObtainSerializer):
 
 class OrganizationSerializer(serializers.ModelSerializer):
     """
-    Organization serializer
+    Serializer for Organization model
     """
     class Meta:
         model = Organization

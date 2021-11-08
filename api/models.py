@@ -19,7 +19,6 @@ User.REQUIRED_FIELDS = ['username']
 class Organization(models.Model):
     name = models.CharField(max_length=128, blank=False)
     description = models.TextField(max_length=2048, blank=True, default='')
-    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
     email = models.EmailField(max_length=254, blank=True, default='')
     address = models.TextField(max_length=2048, blank=True, default='')
     url = models.URLField(max_length=254, blank=True, default='')
@@ -29,6 +28,8 @@ class Organization(models.Model):
     linkedin_url = models.URLField(max_length=254, blank=True, default='')
     twitter_url = models.URLField(max_length=254, blank=True, default='')
     github_url = models.URLField(max_length=254, blank=True, default='')
+    created_by = models.ForeignKey(User, null=False, on_delete=models.CASCADE, related_name='organization_created_by')
+    owner = models.ForeignKey(User, null=True, on_delete=models.CASCADE, related_name='organization_owner')
 
     class Meta:
         ordering = ['id']
@@ -46,17 +47,18 @@ class Profile(models.Model):
 
 class BlockChain(models.Model):
     abbreviation = models.CharField(max_length=4, blank=False)
-    canary_beta_public_key = models.CharField(max_length=64, blank=False)
-    canary_live_public_key = models.CharField(max_length=64, blank=False)
-    canary_test_public_key = models.CharField(max_length=64, blank=False)
-    custom_domain = models.CharField(max_length=256, blank=True, default='')
+    name = models.CharField(max_length=128, blank=True, default='')
+    description = models.TextField(max_length=2048, blank=True, default='')
     created = models.DateTimeField(auto_now=True)
-    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
     debug = models.CharField(max_length=100, blank=True, default='INFO')
     domain_svc = models.CharField(max_length=256, blank=True, default='verigasvc.com')
     enable_custom_domain = models.BooleanField(blank=False, default=False)
+    custom_domain = models.CharField(max_length=256, blank=True, default='')
     faucet_public_key = models.CharField(max_length=64, blank=False)
     landing_public_key = models.CharField(max_length=64, blank=False)
+    canary_beta_public_key = models.CharField(max_length=64, blank=False)
+    canary_live_public_key = models.CharField(max_length=64, blank=False)
+    canary_test_public_key = models.CharField(max_length=64, blank=False)
     genesis_beta_public_key = models.CharField(max_length=64, blank=False)
     genesis_beta_account = models.CharField(max_length=65, blank=False)
     genesis_beta_work = models.CharField(max_length=16, blank=False)
@@ -105,9 +107,9 @@ class BlockChain(models.Model):
     binary_public = models.BooleanField(default=False)
     s3_bucket_name = models.CharField(max_length=256, blank=True)
     number_of_peers = models.IntegerField(blank=False, default=2)
-    name = models.CharField(max_length=128, blank=True, default='')
-    description = models.TextField(max_length=2048, blank=True, default='')
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, blank=True)
+    created_by = models.ForeignKey(User, null=False, on_delete=models.CASCADE, related_name='blockchain_created_by')
+    organization = models.ForeignKey(Organization, blank=True, null=True, on_delete=models.CASCADE)
+    owner = models.ForeignKey(User, null=True, on_delete=models.CASCADE, related_name='blockchain_owner')
 
     class Meta:
         ordering = ['id']

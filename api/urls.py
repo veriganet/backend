@@ -4,6 +4,16 @@ from django_rest_passwordreset import views as drp_views
 from api import views
 
 
+blockchain_list = views.BlockChainViewSet.as_view({
+    'get': 'list',
+    'post': 'create',
+})
+blockchain_detail = views.BlockChainViewSet.as_view({
+    'get': 'retrieve',
+    'put': 'update',
+    'patch': 'partial_update',
+    'delete': 'destroy',
+})
 email_verify = views.EmailVerifyViewSet.as_view({
     'get': 'update',
 })
@@ -54,6 +64,8 @@ register_user = views.RegisterUserViewSet.as_view({
 
 urlpatterns = [
     path('', views.APIRootView.as_view()),
+    path('blockchains/', blockchain_list, name='blockchain_list'),
+    path('blockchains/<int:pk>', blockchain_detail, name='blockchain_detail'),
     path('email/verify/', email_verify, name='email_verify'),
     path('email/verify-send/', email_verify_send, name='email_verify_send'),
     path('organizations/', organization_list, name='organization_list'),

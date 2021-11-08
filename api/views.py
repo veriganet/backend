@@ -12,10 +12,10 @@ from rest_framework import generics, viewsets, status
 from templated_email import send_templated_mail
 
 from api.permissions import IsOwner
-from api.models import Profile, Organization
+from api.models import Profile, Organization, BlockChain
 from api.serializers import CustomTokenObtainPairSerializer, UserSerializer, \
     RegisterSerializer, RegisterUserSerializer, ProfileSerializer, \
-    OrganizationSerializer
+    OrganizationSerializer, BlockChainSerializer
 
 
 class APIRootView(APIView):
@@ -26,6 +26,7 @@ class APIRootView(APIView):
 
     def get(self, request, format=None):
         return Response({
+            'blockchains': reverse('blockchain_list', request=request, format=format),
             'email/verify': reverse('email_verify', request=request, format=format),
             'email/verify-send': reverse('email_verify_send', request=request, format=format),
             'organizations': reverse('organization_list', request=request, format=format),
@@ -39,6 +40,18 @@ class APIRootView(APIView):
             'users/password-reset/validate': reverse('user_password_reset_validate', request=request, format=format),
             'users/profiles': reverse('user_profile', request=request, format=format),
         })
+
+
+class BlockChainViewSet(viewsets.ModelViewSet):
+    """
+    List, retrieve, update, partial updat and delete actions for blockchains
+
+    for blockchain details:
+    blockchains/<pk>/
+    """
+    queryset = BlockChain.objects.all()
+    serializer_class = BlockChainSerializer
+    permission_classes = [IsAuthenticated, IsAdminUser]
 
 
 class EmailTokenObtainPairView(TokenObtainPairView):
