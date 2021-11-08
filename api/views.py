@@ -12,9 +12,10 @@ from rest_framework import generics, viewsets, status
 from templated_email import send_templated_mail
 
 from api.permissions import IsOwner
-from api.models import Profile
+from api.models import Profile, Organization
 from api.serializers import CustomTokenObtainPairSerializer, UserSerializer, \
-    RegisterSerializer, RegisterUserSerializer, ProfileSerializer
+    RegisterSerializer, RegisterUserSerializer, ProfileSerializer, \
+    OrganizationSerializer
 
 
 class APIRootView(APIView):
@@ -27,6 +28,7 @@ class APIRootView(APIView):
         return Response({
             'email/verify': reverse('email_verify', request=request, format=format),
             'email/verify-send': reverse('email_verify_send', request=request, format=format),
+            'organizations': reverse('organization_list', request=request, format=format),
             'register': reverse('register_user', request=request, format=format),
             'token': reverse('token_obtain_pair', request=request, format=format),
             'token/refresh': reverse('token_refresh', request=request, format=format),
@@ -58,9 +60,21 @@ class UserViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, IsAdminUser]
 
 
+class OrganizationViewSet(viewsets.ModelViewSet):
+    """
+    List, retrieve, update, partial update and delete actions for organizations
+
+    for organization details:
+    organizations/<pk>/
+    """
+    queryset = Organization.objects.all()
+    serializer_class = OrganizationSerializer
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+
 class ProfileViewSet(viewsets.ModelViewSet):
     """
-    List, retreive, update actions for user profiles
+    List, retrieve, update actions for user profiles
     """
     queryset = Profile.objects.all()
     serializer_class = ProfileSerializer

@@ -4,6 +4,7 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 
 from api.views import Profile
+from api.models import Organization
 
 
 class EmailTokenObtainSerializer(TokenObtainSerializer):
@@ -30,6 +31,15 @@ class CustomTokenObtainPairSerializer(EmailTokenObtainSerializer):
         data["access"] = str(refresh.access_token)
 
         return data
+
+
+class OrganizationSerializer(serializers.ModelSerializer):
+    """
+    Organization serializer
+    """
+    class Meta:
+        model = Organization
+        fields = '__all__'
 
 
 class ProfileSerializer(serializers.ModelSerializer):

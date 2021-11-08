@@ -38,6 +38,16 @@ user_profile_detail = views.ProfileViewSet.as_view({
     'patch': 'partial_update',
     'delete': 'destroy',
 })
+organization_list = views.OrganizationViewSet.as_view({
+    'get': 'list',
+    'post': 'create'
+})
+organization_detail = views.OrganizationViewSet.as_view({
+    'get': 'retrieve',
+    'put': 'update',
+    'patch': 'partial_update',
+    'delete': 'destroy',
+})
 register_user = views.RegisterUserViewSet.as_view({
     'post': 'create',
 })
@@ -46,6 +56,8 @@ urlpatterns = [
     path('', views.APIRootView.as_view()),
     path('email/verify/', email_verify, name='email_verify'),
     path('email/verify-send/', email_verify_send, name='email_verify_send'),
+    path('organizations/', organization_list, name='organization_list'),
+    path('organizations/<int:pk>', organization_detail, name='organization_detail'),
     path('register/', register_user, name='register_user'),
     path('token/', views.EmailTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', jwt_views.TokenRefreshView.as_view(), name='token_refresh'),

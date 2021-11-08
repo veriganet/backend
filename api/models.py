@@ -17,17 +17,18 @@ User.REQUIRED_FIELDS = ['username']
 
 
 class Organization(models.Model):
-    address = models.TextField(max_length=2048, blank=True, default='')
-    email = models.EmailField(max_length=254, blank=True, default='')
-    description = models.TextField(max_length=2048, blank=True, default='')
     name = models.CharField(max_length=128, blank=False)
+    description = models.TextField(max_length=2048, blank=True, default='')
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    email = models.EmailField(max_length=254, blank=True, default='')
+    address = models.TextField(max_length=2048, blank=True, default='')
     url = models.URLField(max_length=254, blank=True, default='')
+    coincapmarket_url = models.URLField(max_length=254, blank=True, default='')
+    discord_url = models.URLField(max_length=254, blank=True, default='')
+    facebook_url = models.URLField(max_length=254, blank=True, default='')
     linkedin_url = models.URLField(max_length=254, blank=True, default='')
     twitter_url = models.URLField(max_length=254, blank=True, default='')
     github_url = models.URLField(max_length=254, blank=True, default='')
-    facebook_url = models.URLField(max_length=254, blank=True, default='')
-    discord_url = models.URLField(max_length=254, blank=True, default='')
-    coincapmarket_url = models.URLField(max_length=254, blank=True, default='')
 
     class Meta:
         ordering = ['id']
@@ -109,4 +110,4 @@ class BlockChain(models.Model):
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, blank=True)
 
     class Meta:
-        ordering = ['abbreviation']
+        ordering = ['id']
