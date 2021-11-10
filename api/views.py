@@ -30,18 +30,17 @@ class APIRootView(APIView):
             # admin
             'admin/blockchains': reverse('blockchain_list', request=request, format=format),
             'admin/organizations': reverse('organization_list', request=request, format=format),
-            'admin/token': reverse('token_obtain_pair', request=request, format=format),
-            'admin/token/refresh': reverse('token_refresh', request=request, format=format),
-            'admin/token/verify': reverse('token_verify', request=request, format=format),
             'admin/users': reverse('user_list', request=request, format=format),
-            'admin/users/password-reset': reverse('user_password_reset', request=request, format=format),
-            'admin/users/password-reset/confirm': reverse('user_password_reset_confirm', request=request, format=format),
-            'admin/users/password-reset/validate': reverse('user_password_reset_validate', request=request, format=format),
             'admin/users/profiles': reverse('user_profile', request=request, format=format),
             # user
+            'user/blockchains': reverse('user_blockchain_list', request=request, format=format),
             'user/email/verify': reverse('email_verify', request=request, format=format),
             'user/email/verify-send': reverse('email_verify_send', request=request, format=format),
-            'user/blockchains': reverse('user_blockchain_list', request=request, format=format),
+            'user/password-reset': reverse('user_password_reset', request=request, format=format),
+            'user/password-reset/confirm': reverse('user_password_reset_confirm', request=request,
+                                                          format=format),
+            'user/password-reset/validate': reverse('user_password_reset_validate', request=request,
+                                                           format=format),
             # public
             'register': reverse('register_user', request=request, format=format),
             'token': reverse('token_obtain_pair', request=request, format=format),
@@ -146,7 +145,7 @@ class UserProfileViewSet(viewsets.ModelViewSet):
 
 
 class EmailVerifyViewSet(viewsets.GenericViewSet):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def update(self, request):
         token = request.GET.get('token')
