@@ -73,12 +73,35 @@ class ProfileSerializer(serializers.ModelSerializer):
         return profile
 
 
+class UserProfileSerializer(serializers.ModelSerializer):
+    """
+    Profile serializer for current user
+    """
+    class Meta:
+        model = Profile
+        fields = ['id', 'is_email_verified', 'organization']
+        read_only_fields = ['id', 'is_email_verified']
+
+
 class UserSerializer(serializers.ModelSerializer):
     profile = ProfileSerializer(required=True)
 
     class Meta:
         model = User
         fields = '__all__'
+
+
+class UserUserSerializer(serializers.ModelSerializer):
+    """
+    User serializer for current user
+    """
+    profile = UserProfileSerializer(read_only=True)
+
+    class Meta:
+        model = User
+        fields = ['id', 'profile', 'last_login', 'first_name', 'last_name',
+                  'email', 'date_joined']
+        read_only_fields = ['id', 'profile', 'last_login', 'email', 'date_joined']
 
 
 class RegisterUserSerializer(serializers.ModelSerializer):

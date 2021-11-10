@@ -38,7 +38,6 @@ class Organization(models.Model):
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     is_email_verified = models.BooleanField(default=False, blank=False)
-    email_verify_token = models.CharField(max_length=256, blank=True, default='')
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, null=True)
 
     class Meta:
