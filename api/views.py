@@ -16,7 +16,7 @@ from api.models import Profile, Organization, BlockChain
 from api.serializers import CustomTokenObtainPairSerializer, UserSerializer, \
     RegisterSerializer, RegisterUserSerializer, ProfileSerializer, \
     OrganizationSerializer, BlockChainSerializer, UserUserSerializer, \
-    UserProfileSerializer
+    UserProfileSerializer, BlockChainUserSerializer, OrganizationUserSerializer
 
 
 class APIRootView(APIView):
@@ -41,13 +41,14 @@ class APIRootView(APIView):
                                                           format=format),
             'user/password-reset/validate': reverse('user_password_reset_validate', request=request,
                                                            format=format),
+            'user/organizations': reverse('user_organization_list', request=request, format=format),
+            'user/profile': reverse('user_user_profile_detail', request=request, format=format),
+            'user/user': reverse('user_user_detail', request=request, format=format),
             # public
             'register': reverse('register_user', request=request, format=format),
             'token': reverse('token_obtain_pair', request=request, format=format),
             'token/refresh': reverse('token_refresh', request=request, format=format),
             'token/verify': reverse('token_verify', request=request, format=format),
-            'user/profile': reverse('user_profile_detail', request=request, format=format),
-            'user/user': reverse('user_user_detail', request=request, format=format),
         })
 
 
@@ -111,56 +112,13 @@ class BlockChainUserViewSet(viewsets.ModelViewSet):
     user/blockchains/<pk>/
     """
     model = BlockChain
-    serializer_class = BlockChainSerializer
+    serializer_class = BlockChainUserSerializer
     permission_classes = [IsAuthenticated, IsOwner]
 
     def get_queryset(self):
         user = self.request.user
 
         return BlockChain.objects.filter(owner=user)
-
-
-class UserUserViewSet(viewsets.ModelViewSet):
-    """
-    Retrieve, update, partial update and delete actions for user
-    """
-    queryset = User.objects.all()
-    serializer_class = UserUserSerializer
-    permission_classes = [IsAuthenticated, IsUserOwner]
-
-    def get_object(self):
-        return self.request.user
-
-
-class UserProfileViewSet(viewsets.ModelViewSet):
-    """
-    Retrieve, update, partial update and delete actions for profile
-    """
-    queryset = Profile.objects.all()
-    serializer_class = UserProfileSerializer
-    permission_classes = [IsAuthenticated, IsUserOwner]
-
-    def get_object(self):
-        return self.request.user.profile
-
-
-class EmailVerifyViewSet(viewsets.GenericViewSet):
-    permission_classes = [IsAuthenticated]
-
-    def update(self, request):
-        token = request.GET.get('token')
-
-        try:
-            payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
-            user = User.objects.get(email=payload['user_id'])
-            if not user.profile.is_email_verified:
-                user.profile.is_email_verified = True
-                user.save()
-            return Response({'status': 'Verified'}, status=status.HTTP_200_OK)
-        except jwt.ExpiredSignatureError as identifier:
-            return Response({'error': 'Activation Link Expired'}, status=status.HTTP_400_BAD_REQUEST)
-        except jwt.exceptions.DecodeError as identifier:
-            return Response({'error': 'Invalid / Missing Token'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class EmailVerifySendViewSet(viewsets.GenericViewSet):
@@ -195,6 +153,73 @@ class EmailVerifySendViewSet(viewsets.GenericViewSet):
 
             return Response({"status": 'Verification email sent'},
                             status=status.HTTP_200_OK)
+
+
+class EmailVerifyViewSet(viewsets.GenericViewSet):
+    permission_classes = [IsAuthenticated]
+
+    def update(self, request):
+        token = request.GET.get('token')
+
+        try:
+            payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+            user = User.objects.get(email=payload['user_id'])
+            if not user.profile.is_email_verified:
+                user.profile.is_email_verified = True
+                user.save()
+            return Response({'status': 'Verified'}, status=status.HTTP_200_OK)
+        except jwt.ExpiredSignatureError as identifier:
+            return Response({'error': 'Activation Link Expired'}, status=status.HTTP_400_BAD_REQUEST)
+        except jwt.exceptions.DecodeError as identifier:
+            return Response({'error': 'Invalid / Missing Token'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class OrganizationUserViewSet(viewsets.ModelViewSet):
+    """
+    List, retrieve, update, partial update and delete actions for organizations
+
+    for organization details:
+    organizations/<pk>/
+    """
+    model = Organization
+    serializer_class = OrganizationUserSerializer
+    permission_classes = [IsAuthenticated, IsOwner]
+
+    def get_queryset(self):
+        user = self.request.user
+
+        return Organization.objects.filter(owner=user)
+
+    def create(self, request, *args, **kwargs):
+        serializer = OrganizationUserSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(created_by=request.user, owner=request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserUserViewSet(viewsets.ModelViewSet):
+    """
+    Retrieve, update, partial update and delete actions for user
+    """
+    queryset = User.objects.all()
+    serializer_class = UserUserSerializer
+    permission_classes = [IsAuthenticated, IsUserOwner]
+
+    def get_object(self):
+        return self.request.user
+
+
+class UserProfileViewSet(viewsets.ModelViewSet):
+    """
+    Retrieve, update, partial update and delete actions for profile
+    """
+    queryset = Profile.objects.all()
+    serializer_class = UserProfileSerializer
+    permission_classes = [IsAuthenticated, IsUserOwner]
+
+    def get_object(self):
+        return self.request.user.profile
 
 # user views - end
 

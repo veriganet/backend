@@ -28,6 +28,7 @@ class Organization(models.Model):
     linkedin_url = models.URLField(max_length=254, blank=True, default='')
     twitter_url = models.URLField(max_length=254, blank=True, default='')
     github_url = models.URLField(max_length=254, blank=True, default='')
+    created_at = models.DateTimeField(auto_now=True)
     created_by = models.ForeignKey(User, null=False, on_delete=models.CASCADE, related_name='organization_created_by')
     owner = models.ForeignKey(User, null=True, on_delete=models.CASCADE, related_name='organization_owner')
 
@@ -48,7 +49,6 @@ class BlockChain(models.Model):
     abbreviation = models.CharField(max_length=4, blank=False)
     name = models.CharField(max_length=128, blank=True, default='')
     description = models.TextField(max_length=2048, blank=True, default='')
-    created = models.DateTimeField(auto_now=True)
     debug = models.CharField(max_length=100, blank=True, default='INFO')
     domain_svc = models.CharField(max_length=256, blank=True, default='verigasvc.com')
     enable_custom_domain = models.BooleanField(blank=False, default=False)
@@ -106,6 +106,7 @@ class BlockChain(models.Model):
     binary_public = models.BooleanField(default=False)
     s3_bucket_name = models.CharField(max_length=256, blank=True)
     number_of_peers = models.IntegerField(blank=False, default=2)
+    created_at = models.DateTimeField(auto_now=True)
     created_by = models.ForeignKey(User, null=False, on_delete=models.CASCADE, related_name='blockchain_created_by')
     organization = models.ForeignKey(Organization, blank=True, null=True, on_delete=models.CASCADE)
     owner = models.ForeignKey(User, null=True, on_delete=models.CASCADE, related_name='blockchain_owner')

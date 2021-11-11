@@ -77,13 +77,23 @@ user_blockchain_detail = views.BlockChainUserViewSet.as_view({
     'patch': 'partial_update',
     'delete': 'destroy',
 })
+user_organization_list = views.OrganizationUserViewSet.as_view({
+    'get': 'list',
+    'post': 'create',
+})
+user_organization_detail = views.OrganizationUserViewSet.as_view({
+    'get': 'retrieve',
+    'put': 'update',
+    'patch': 'partial_update',
+    'delete': 'destroy',
+})
 user_user_detail = views.UserUserViewSet.as_view({
     'get': 'retrieve',
     'put': 'update',
     'patch': 'partial_update',
     'delete': 'destroy',
 })
-user_profile_detail = views.UserProfileViewSet.as_view({
+user_user_profile_detail = views.UserProfileViewSet.as_view({
     'get': 'retrieve',
     'put': 'update',
     'patch': 'partial_update',
@@ -118,12 +128,14 @@ urlpatterns = [
     path('user/blockchains/<int:pk>', user_blockchain_detail, name='user_blockchain_detail'),
     path('user/email/verify/', email_verify, name='email_verify'),
     path('user/email/verify-send/', email_verify_send, name='email_verify_send'),
+    path('user/organizations/', user_organization_list, name='user_organization_list'),
+    path('user/organizations/<int:pk>', user_organization_detail, name='user_organization_detail'),
+    path('user/profile/', user_user_profile_detail, name='user_user_profile_detail'),
+    path('user/user/', user_user_detail, name='user_user_detail'),
     # public
     path('register/', register_user, name='register_user'),
     path('token/', views.EmailTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', jwt_views.TokenRefreshView.as_view(), name='token_refresh'),
     path('token/verify/', jwt_views.TokenVerifyView.as_view(), name='token_verify'),
-    path('user/profile/', user_profile_detail, name='user_profile_detail'),
-    path('user/user/', user_user_detail, name='user_user_detail'),
 ]
 

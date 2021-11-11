@@ -16,6 +16,78 @@ class BlockChainSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class BlockChainUserSerializer(serializers.ModelSerializer):
+    """
+    Serializer for BolockChain model
+    """
+    class Meta:
+        model = BlockChain
+        read_only_fields = ['id', 'created']
+        fields = [
+            'id',
+            'abbreviation',
+            'name',
+            'description',
+            'created',
+            'enable_custom_domain',
+            'custom_domain',
+            'faucet_public_key',
+            'landing_public_key',
+            'canary_beta_public_key',
+            'canary_live_public_key',
+            'canary_test_public_key',
+            'genesis_beta_account',
+            'genesis_beta_work',
+            'genesis_beta_signature',
+            'genesis_dev_public_key',
+            'genesis_dev_private_key',
+            'genesis_dev_account',
+            'genesis_dev_work',
+            'genesis_dev_signature',
+            'genesis_live_public_key',
+            'genesis_live_account',
+            'genesis_live_work',
+            'genesis_live_signature',
+            'genesis_test_public_key',
+            'genesis_test_account',
+            'genesis_test_work',
+            'genesis_test_signature',
+            'beta_pre_conf_rep_public_key_0',
+            'beta_pre_conf_rep_public_key_1',
+            'beta_pre_conf_rep_private_key_0',
+            'beta_pre_conf_rep_private_key_1',
+            'live_pre_conf_rep_public_key_0',
+            'live_pre_conf_rep_public_key_1',
+            'live_pre_conf_rep_public_key_2',
+            'live_pre_conf_rep_public_key_3',
+            'live_pre_conf_rep_public_key_4',
+            'live_pre_conf_rep_public_key_5',
+            'live_pre_conf_rep_public_key_6',
+            'live_pre_conf_rep_public_key_7',
+            'live_pre_conf_rep_private_key_0',
+            'live_pre_conf_rep_private_key_1',
+            'live_pre_conf_rep_private_key_2',
+            'live_pre_conf_rep_private_key_3',
+            'live_pre_conf_rep_private_key_4',
+            'live_pre_conf_rep_private_key_5',
+            'live_pre_conf_rep_private_key_6',
+            'live_pre_conf_rep_private_key_7',
+            'live_node_peering_port',
+            'beta_node_peering_port',
+            'test_node_peering_port',
+            'live_rpc_port',
+            'beta_rpc_port',
+            'test_rpc_port',
+            'binary_public',
+            's3_bucket_name',
+            'number_of_peers',
+            'created_by',
+            'organization',
+            'owner',
+        ]
+
+
+
 class EmailTokenObtainSerializer(TokenObtainSerializer):
     """
     Use email for username_field
@@ -49,6 +121,20 @@ class OrganizationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = '__all__'
+
+
+class OrganizationUserSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Organization model
+    """
+
+    class Meta:
+        model = Organization
+        fields = '__all__'
+        extra_kwargs = {
+            'created_by': {'read_only': True},
+            'owner': {'read_only': True}
+        }
 
 
 class ProfileSerializer(serializers.ModelSerializer):
