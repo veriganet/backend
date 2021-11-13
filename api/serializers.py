@@ -145,6 +145,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
     """
     Profile serializer for current user
     """
+    organization = OwnerPrimaryKeyRelatedField(model=Organization)
+
     class Meta:
         model = Profile
         fields = ['id', 'is_email_verified', 'organization']
