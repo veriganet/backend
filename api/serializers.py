@@ -7,6 +7,16 @@ from api.views import Profile
 from api.models import Organization, BlockChain
 
 
+class OwnerPrimaryKeyRelatedField(serializers.PrimaryKeyRelatedField):
+    def __init__(self, **kwargs):
+        self.model = kwargs.pop('model')
+        assert hasattr(self.model, 'owner')
+        super().__init__(**kwargs)
+
+    def get_queryset(self):
+        return self.model.objects.filter(owner=self.context['request'].user)
+
+
 class BlockChainSerializer(serializers.ModelSerializer):
     """
     Serializer for BolockChain model
@@ -14,6 +24,50 @@ class BlockChainSerializer(serializers.ModelSerializer):
     class Meta:
         model = BlockChain
         fields = '__all__'
+
+
+class BlockChainUserSerializer(serializers.ModelSerializer):
+    """
+    Serializer for BolockChain model
+    """
+    organization = OwnerPrimaryKeyRelatedField(model=Organization)
+
+    class Meta:
+        model = BlockChain
+        fields = '__all__'
+        extra_kwargs = {
+            'created_by': {'read_only': True},
+            'organization': {'read_only': False},
+            'owner': {'read_only': True}
+        }
+
+
+class BlockChainUserUpdatePatchSerializer(serializers.ModelSerializer):
+    """
+    Serializer for BlockChain model with readonly fields
+    Applies to update and patch actions
+    """
+    organization = OwnerPrimaryKeyRelatedField(model=Organization)
+
+    class Meta:
+        model = BlockChain
+        fields = [
+            'id',
+            'organization',
+            'name',
+            'description',
+            'enable_custom_domain',
+            'custom_domain',
+            'binary_public',
+            'number_of_peers',
+            'debug',
+            'logging',
+        ]
+        extra_kwargs = {
+            'created_by': {'read_only': True},
+            'organization': {'read_only': False},
+            'owner': {'read_only': True}
+        }
 
 
 class EmailTokenObtainSerializer(TokenObtainSerializer):
@@ -51,6 +105,20 @@ class OrganizationSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class OrganizationUserSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Organization model
+    """
+
+    class Meta:
+        model = Organization
+        fields = '__all__'
+        extra_kwargs = {
+            'created_by': {'read_only': True},
+            'owner': {'read_only': True}
+        }
+
+
 class ProfileSerializer(serializers.ModelSerializer):
     """
     User profile serializer for user profile detail
@@ -73,12 +141,37 @@ class ProfileSerializer(serializers.ModelSerializer):
         return profile
 
 
+class UserProfileSerializer(serializers.ModelSerializer):
+    """
+    Profile serializer for current user
+    """
+    organization = OwnerPrimaryKeyRelatedField(model=Organization)
+
+    class Meta:
+        model = Profile
+        fields = ['id', 'is_email_verified', 'organization']
+        read_only_fields = ['id', 'is_email_verified']
+
+
 class UserSerializer(serializers.ModelSerializer):
     profile = ProfileSerializer(required=True)
 
     class Meta:
         model = User
         fields = '__all__'
+
+
+class UserUserSerializer(serializers.ModelSerializer):
+    """
+    User serializer for current user
+    """
+    profile = UserProfileSerializer(read_only=True)
+
+    class Meta:
+        model = User
+        fields = ['id', 'profile', 'last_login', 'first_name', 'last_name',
+                  'email', 'date_joined']
+        read_only_fields = ['id', 'profile', 'last_login', 'email', 'date_joined']
 
 
 class RegisterUserSerializer(serializers.ModelSerializer):
