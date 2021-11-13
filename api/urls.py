@@ -107,7 +107,6 @@ user_user_profile_detail = views.UserProfileViewSet.as_view({
 
 # public - end
 
-
 urlpatterns = [
     # root
     path('', views.APIRootView.as_view()),

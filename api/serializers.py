@@ -7,6 +7,16 @@ from api.views import Profile
 from api.models import Organization, BlockChain
 
 
+class OwnerPrimaryKeyRelatedField(serializers.PrimaryKeyRelatedField):
+    def __init__(self, **kwargs):
+        self.model = kwargs.pop('model')
+        assert hasattr(self.model, 'owner')
+        super().__init__(**kwargs)
+
+    def get_queryset(self):
+        return self.model.objects.filter(owner=self.context['request'].user)
+
+
 class BlockChainSerializer(serializers.ModelSerializer):
     """
     Serializer for BolockChain model
@@ -20,72 +30,44 @@ class BlockChainUserSerializer(serializers.ModelSerializer):
     """
     Serializer for BolockChain model
     """
+    organization = OwnerPrimaryKeyRelatedField(model=Organization)
+
     class Meta:
         model = BlockChain
-        read_only_fields = ['id', 'created']
+        fields = '__all__'
+        extra_kwargs = {
+            'created_by': {'read_only': True},
+            'organization': {'read_only': False},
+            'owner': {'read_only': True}
+        }
+
+
+class BlockChainUserUpdatePatchSerializer(serializers.ModelSerializer):
+    """
+    Serializer for BlockChain model with readonly fields
+    Applies to update and patch actions
+    """
+    organization = OwnerPrimaryKeyRelatedField(model=Organization)
+
+    class Meta:
+        model = BlockChain
         fields = [
             'id',
-            'abbreviation',
+            'organization',
             'name',
             'description',
-            'created',
             'enable_custom_domain',
             'custom_domain',
-            'faucet_public_key',
-            'landing_public_key',
-            'canary_beta_public_key',
-            'canary_live_public_key',
-            'canary_test_public_key',
-            'genesis_beta_account',
-            'genesis_beta_work',
-            'genesis_beta_signature',
-            'genesis_dev_public_key',
-            'genesis_dev_private_key',
-            'genesis_dev_account',
-            'genesis_dev_work',
-            'genesis_dev_signature',
-            'genesis_live_public_key',
-            'genesis_live_account',
-            'genesis_live_work',
-            'genesis_live_signature',
-            'genesis_test_public_key',
-            'genesis_test_account',
-            'genesis_test_work',
-            'genesis_test_signature',
-            'beta_pre_conf_rep_public_key_0',
-            'beta_pre_conf_rep_public_key_1',
-            'beta_pre_conf_rep_private_key_0',
-            'beta_pre_conf_rep_private_key_1',
-            'live_pre_conf_rep_public_key_0',
-            'live_pre_conf_rep_public_key_1',
-            'live_pre_conf_rep_public_key_2',
-            'live_pre_conf_rep_public_key_3',
-            'live_pre_conf_rep_public_key_4',
-            'live_pre_conf_rep_public_key_5',
-            'live_pre_conf_rep_public_key_6',
-            'live_pre_conf_rep_public_key_7',
-            'live_pre_conf_rep_private_key_0',
-            'live_pre_conf_rep_private_key_1',
-            'live_pre_conf_rep_private_key_2',
-            'live_pre_conf_rep_private_key_3',
-            'live_pre_conf_rep_private_key_4',
-            'live_pre_conf_rep_private_key_5',
-            'live_pre_conf_rep_private_key_6',
-            'live_pre_conf_rep_private_key_7',
-            'live_node_peering_port',
-            'beta_node_peering_port',
-            'test_node_peering_port',
-            'live_rpc_port',
-            'beta_rpc_port',
-            'test_rpc_port',
             'binary_public',
-            's3_bucket_name',
             'number_of_peers',
-            'created_by',
-            'organization',
-            'owner',
+            'debug',
+            'logging',
         ]
-
+        extra_kwargs = {
+            'created_by': {'read_only': True},
+            'organization': {'read_only': False},
+            'owner': {'read_only': True}
+        }
 
 
 class EmailTokenObtainSerializer(TokenObtainSerializer):

@@ -16,7 +16,8 @@ from api.models import Profile, Organization, BlockChain
 from api.serializers import CustomTokenObtainPairSerializer, UserSerializer, \
     RegisterSerializer, RegisterUserSerializer, ProfileSerializer, \
     OrganizationSerializer, BlockChainSerializer, UserUserSerializer, \
-    UserProfileSerializer, BlockChainUserSerializer, OrganizationUserSerializer
+    UserProfileSerializer, BlockChainUserSerializer, OrganizationUserSerializer, \
+    BlockChainUserUpdatePatchSerializer
 
 
 class APIRootView(APIView):
@@ -26,30 +27,50 @@ class APIRootView(APIView):
     """
 
     def get(self, request, format=None):
-        return Response({
-            # admin
+        admin_urls = {
             'admin/blockchains': reverse('blockchain_list', request=request, format=format),
             'admin/organizations': reverse('organization_list', request=request, format=format),
             'admin/users': reverse('user_list', request=request, format=format),
             'admin/users/profiles': reverse('user_profile', request=request, format=format),
-            # user
+        }
+        user_urls = {
             'user/blockchains': reverse('user_blockchain_list', request=request, format=format),
             'user/email/verify': reverse('email_verify', request=request, format=format),
             'user/email/verify-send': reverse('email_verify_send', request=request, format=format),
             'user/password-reset': reverse('user_password_reset', request=request, format=format),
             'user/password-reset/confirm': reverse('user_password_reset_confirm', request=request,
-                                                          format=format),
+                                                   format=format),
             'user/password-reset/validate': reverse('user_password_reset_validate', request=request,
-                                                           format=format),
+                                                    format=format),
             'user/organizations': reverse('user_organization_list', request=request, format=format),
             'user/profile': reverse('user_user_profile_detail', request=request, format=format),
             'user/user': reverse('user_user_detail', request=request, format=format),
-            # public
+        }
+        public_urls = {
             'register': reverse('register_user', request=request, format=format),
             'token': reverse('token_obtain_pair', request=request, format=format),
             'token/refresh': reverse('token_refresh', request=request, format=format),
             'token/verify': reverse('token_verify', request=request, format=format),
-        })
+        }
+
+        admin_all_urls = {}
+        admin_all_urls.update(admin_urls)
+        admin_all_urls.update(user_urls)
+        admin_all_urls.update(public_urls)
+
+        user_all_urls = {}
+        user_all_urls.update(user_urls)
+        user_all_urls.update(public_urls)
+
+        if request.user.is_superuser:
+            # admin urls
+            return Response(admin_all_urls)
+        elif request.user.is_authenticated:
+            # user urls
+            return Response(user_all_urls)
+        else:
+            # public urls
+            return Response(public_urls)
 
 
 #
@@ -112,8 +133,12 @@ class BlockChainUserViewSet(viewsets.ModelViewSet):
     user/blockchains/<pk>/
     """
     model = BlockChain
-    serializer_class = BlockChainUserSerializer
     permission_classes = [IsAuthenticated, IsOwner]
+
+    def get_serializer_class(self):
+        if self.action == 'update' or self.action == 'patch':
+            return BlockChainUserUpdatePatchSerializer
+        return BlockChainUserSerializer
 
     def get_queryset(self):
         user = self.request.user
