@@ -5,7 +5,8 @@ from django.conf import settings
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
+from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny, \
+    IsAuthenticatedOrReadOnly
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import viewsets, status
@@ -25,6 +26,8 @@ class APIRootView(APIView):
     Root of backed api
     This is the actual api endpoint for all api calls
     """
+
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get(self, request, format=None):
         admin_urls = {
@@ -68,7 +71,7 @@ class APIRootView(APIView):
         elif request.user.is_authenticated:
             # user urls
             return Response(user_all_urls)
-        else:
+        elif not request.user.is_authenticated:
             # public urls
             return Response(public_urls)
 
