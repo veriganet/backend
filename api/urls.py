@@ -99,6 +99,9 @@ user_user_profile_detail = views.UserProfileViewSet.as_view({
     'patch': 'partial_update',
     'delete': 'destroy',
 })
+user_geo_location = views.UserGeoLocationViewSet.as_view({
+    'get': 'retrieve',
+})
 # user - end
 
 #
@@ -125,6 +128,7 @@ urlpatterns = [
     # user
     path('user/blockchains/', user_blockchain_list, name='user_blockchain_list'),
     path('user/blockchains/<int:pk>', user_blockchain_detail, name='user_blockchain_detail'),
+    path('user/geolocation/', user_geo_location, name='user_geo_location'),
     path('user/email/verify/', email_verify, name='email_verify'),
     path('user/email/verify-send/', email_verify_send, name='email_verify_send'),
     path('user/organizations/', user_organization_list, name='user_organization_list'),

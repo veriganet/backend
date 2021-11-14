@@ -1,4 +1,6 @@
+import environ
 import jwt
+import requests
 from django.contrib.auth.models import User
 from django.contrib.sites.shortcuts import get_current_site
 from django.conf import settings
@@ -19,6 +21,7 @@ from api.serializers import CustomTokenObtainPairSerializer, UserSerializer, \
     OrganizationSerializer, BlockChainSerializer, UserUserSerializer, \
     UserProfileSerializer, BlockChainUserSerializer, OrganizationUserSerializer, \
     BlockChainUserUpdatePatchSerializer
+from backend.settings import env
 
 
 class APIRootView(APIView):
@@ -38,6 +41,7 @@ class APIRootView(APIView):
         }
         user_urls = {
             'user/blockchains': reverse('user_blockchain_list', request=request, format=format),
+            'user/geolocation': reverse('user_geo_location', request=request, format=format),
             'user/email/verify': reverse('email_verify', request=request, format=format),
             'user/email/verify-send': reverse('email_verify_send', request=request, format=format),
             'user/password-reset': reverse('user_password_reset', request=request, format=format),
@@ -122,6 +126,8 @@ class ProfileViewSet(viewsets.ModelViewSet):
     queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
     permission_classes = [IsAuthenticated, IsAdminUser]
+
+
 # admin views - end
 
 
@@ -149,10 +155,24 @@ class BlockChainUserViewSet(viewsets.ModelViewSet):
         return BlockChain.objects.filter(owner=user)
 
 
+class UserGeoLocationViewSet(viewsets.GenericViewSet):
+    """
+    Gets geographic location of client by IP
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def retrieve(self, request):
+        response = requests.get(env('GEO_LOCATION_API_URL') + '?apiKey='
+                                + env('GEO_LOCATION_API_KEY'))
+        geo_data = response.json()
+        return Response(geo_data)
+
+
 class EmailVerifySendViewSet(viewsets.GenericViewSet):
     permission_classes = [IsAuthenticated]
 
-    def create(self, request, *args,**kwargs):
+    def create(self, request, *args, **kwargs):
         user_email = request.GET.get('email')
 
         if not user_email:
@@ -249,6 +269,7 @@ class UserProfileViewSet(viewsets.ModelViewSet):
     def get_object(self):
         return self.request.user.profile
 
+
 # user views - end
 
 
@@ -285,11 +306,11 @@ class RegisterUserViewSet(viewsets.ModelViewSet):
         token = str(RefreshToken.for_user(user).access_token)
 
         current_site = get_current_site(request).domain
-        verify_url = request.build_absolute_uri(reverse('user_password_reset_confirm'))+"?token=" + token
+        verify_url = request.build_absolute_uri(reverse('user_password_reset_confirm')) + "?token=" + token
 
         send_templated_mail(
             template_name='welcome',
-            from_email='welcome@'+current_site,
+            from_email='welcome@' + current_site,
             recipient_list=[user.email],
             context={
                 'full_name': user.get_full_name(),
