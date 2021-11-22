@@ -32,12 +32,15 @@ class Organization(models.Model):
     created_by = models.ForeignKey(User, null=False, on_delete=models.CASCADE, related_name='organization_created_by')
     owner = models.ForeignKey(User, null=True, on_delete=models.CASCADE, related_name='organization_owner')
 
+    def __str__(self):
+        return "%s - %s" % (self.id, self.name)
+
     class Meta:
         ordering = ['id']
 
 
 class Profile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile', null=True)
     is_email_verified = models.BooleanField(default=False, blank=False)
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE, null=True)
 
@@ -46,11 +49,26 @@ class Profile(models.Model):
 
 
 class BlockChain(models.Model):
+    CREATED = 1
+    DEPLOYING = 2
+    DEPLOYED = 3
+    PENDING = 4
+    SUSPENDED = 4
+    ERROR = 5
+
+    STATUS = (
+        (CREATED, 'Created'),
+        (DEPLOYING, 'Deploying'),
+        (DEPLOYED, 'Deployed'),
+        (PENDING, 'Pending'),
+        (SUSPENDED, 'Suspended'),
+        (ERROR, 'Error'),
+    )
     abbreviation = models.CharField(max_length=4, blank=False)
     name = models.CharField(max_length=128, blank=True, default='')
     description = models.TextField(max_length=2048, blank=True, default='')
-    debug = models.CharField(max_length=100, blank=True, default='INFO')
-    domain_svc = models.CharField(max_length=256, blank=True, default='verigasvc.com')
+    debug = models.CharField(max_length=100, blank=False, default='INFO')
+    domain_svc = models.CharField(max_length=256, blank=False, default='verigasvc.com')
     enable_custom_domain = models.BooleanField(blank=False, default=False)
     custom_domain = models.CharField(max_length=256, blank=True, default='')
     faucet_public_key = models.CharField(max_length=64, blank=False)
@@ -75,10 +93,20 @@ class BlockChain(models.Model):
     genesis_test_account = models.CharField(max_length=65, blank=False)
     genesis_test_work = models.CharField(max_length=16, blank=False)
     genesis_test_signature = models.CharField(max_length=128, blank=False)
+    beta_pre_conf_rep_account_0 = models.CharField(max_length=65, blank=False)
+    beta_pre_conf_rep_account_1 = models.CharField(max_length=65, blank=False)
     beta_pre_conf_rep_public_key_0 = models.CharField(max_length=64, blank=False)
     beta_pre_conf_rep_public_key_1 = models.CharField(max_length=64, blank=False)
     beta_pre_conf_rep_private_key_0 = models.CharField(max_length=64, blank=False)
     beta_pre_conf_rep_private_key_1 = models.CharField(max_length=64, blank=False)
+    live_pre_conf_rep_account_0 = models.CharField(max_length=65, blank=False)
+    live_pre_conf_rep_account_1 = models.CharField(max_length=65, blank=False)
+    live_pre_conf_rep_account_2 = models.CharField(max_length=65, blank=False)
+    live_pre_conf_rep_account_3 = models.CharField(max_length=65, blank=False)
+    live_pre_conf_rep_account_4 = models.CharField(max_length=65, blank=False)
+    live_pre_conf_rep_account_5 = models.CharField(max_length=65, blank=False)
+    live_pre_conf_rep_account_6 = models.CharField(max_length=65, blank=False)
+    live_pre_conf_rep_account_7 = models.CharField(max_length=65, blank=False)
     live_pre_conf_rep_public_key_0 = models.CharField(max_length=64, blank=False)
     live_pre_conf_rep_public_key_1 = models.CharField(max_length=64, blank=False)
     live_pre_conf_rep_public_key_2 = models.CharField(max_length=64, blank=False)
@@ -95,21 +123,45 @@ class BlockChain(models.Model):
     live_pre_conf_rep_private_key_5 = models.CharField(max_length=64, blank=False)
     live_pre_conf_rep_private_key_6 = models.CharField(max_length=64, blank=False)
     live_pre_conf_rep_private_key_7 = models.CharField(max_length=64, blank=False)
-    live_node_peering_port = models.CharField(max_length=5, blank=False)
-    beta_node_peering_port = models.CharField(max_length=5, blank=False)
-    test_node_peering_port = models.CharField(max_length=5, blank=False)
-    live_rpc_port = models.CharField(max_length=5, blank=False)
-    beta_rpc_port = models.CharField(max_length=5, blank=False)
-    test_rpc_port = models.CharField(max_length=5, blank=False)
+    nano_network = models.CharField(max_length=64, blank=False, default='live')
+    nault_version = models.CharField(max_length=64, blank=False, default='v1.15.0')
+    live_node_peering_port = models.CharField(max_length=5, blank=False, default='7075')
+    beta_node_peering_port = models.CharField(max_length=5, blank=False, default='54000')
+    test_node_peering_port = models.CharField(max_length=5, blank=False, default='44000')
+    live_rpc_port = models.CharField(max_length=5, blank=False, default='7076')
+    beta_rpc_port = models.CharField(max_length=5, blank=False, default='55000')
+    test_rpc_port = models.CharField(max_length=5, blank=False, default='45000')
     logging = models.CharField(max_length=100, blank=True, default='INFO')
     node_version = models.CharField(max_length=100, blank=False)
-    binary_public = models.BooleanField(default=False)
-    s3_bucket_name = models.CharField(max_length=256, blank=True)
+    binary_public = models.BooleanField(blank=False, default=False)
+    s3_bucket_name = models.CharField(max_length=256, blank=True, default='')
     number_of_peers = models.IntegerField(blank=False, default=2)
+    status = models.PositiveIntegerField(
+        choices=STATUS,
+        default=CREATED,
+    )
     created_at = models.DateTimeField(auto_now=True)
     created_by = models.ForeignKey(User, null=False, on_delete=models.CASCADE, related_name='blockchain_created_by')
     organization = models.ForeignKey(Organization, blank=True, null=True, on_delete=models.CASCADE)
     owner = models.ForeignKey(User, null=True, on_delete=models.CASCADE, related_name='blockchain_owner')
+
+    def __str__(self):
+        return "%s - %s" % (self.id, self.abbreviation)
+
+    def __int__(self):
+        return self.id
+
+    class Meta:
+        ordering = ['id']
+
+
+class BlockChainBuildDeploy(models.Model):
+    block_chain = models.ForeignKey(BlockChain, on_delete=models.CASCADE, related_name='block_chain')
+    build_id = models.IntegerField(null=False)
+    build_no = models.IntegerField(null=False)
+    status = models.CharField(max_length=128, null=True, default=None)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE,
+                              related_name='block_chain_build_deploy_owner')
 
     class Meta:
         ordering = ['id']

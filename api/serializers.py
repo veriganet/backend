@@ -5,7 +5,7 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 
 from api.views import Profile
-from api.models import Organization, BlockChain
+from api.models import Organization, BlockChain, BlockChainBuildDeploy
 
 
 class OwnerPrimaryKeyRelatedField(serializers.PrimaryKeyRelatedField):
@@ -18,10 +18,23 @@ class OwnerPrimaryKeyRelatedField(serializers.PrimaryKeyRelatedField):
         return self.model.objects.filter(owner=self.context['request'].user)
 
 
+class BlockChainBuildDeploySerializer(serializers.ModelSerializer):
+    """
+    Serializer for BolockChainDeploy model
+    """
+
+    class Meta:
+        model = BlockChainBuildDeploy
+        fields = '__all__'
+
+
 class BlockChainSerializer(serializers.ModelSerializer):
     """
     Serializer for BolockChain model
     """
+    # disabled for now for simplicity
+    # build_deploy = BlockChainBuildDeploySerializer(many=True, read_only=True)
+
     class Meta:
         model = BlockChain
         fields = '__all__'

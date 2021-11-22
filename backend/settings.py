@@ -10,11 +10,40 @@ from pathlib import Path
 
 env = environ.Env(
     # set casting, default value
-    DEBUG=(bool, False),
     ALLOWED_HOSTS=(list, ['127.0.0.1']),
+    BUILD_DEPLOY_BRANCH=(str, 'main'),
+    BUILD_DEPLOY_ORG=(str, 'veriganet'),
+    BUILD_DEPLOY_REPO=(str, 'build-deploy'),
+    DEBUG=(bool, False),
+    DRONE_SERVER=(str, 'https://droneci.veriga.net'),
+    DRONE_TOKEN=(str, ''),
     GEO_LOCATION_API_URL=(str, ''),
-    GEO_LOCATION_API_KEY=(str, '')
+    GEO_LOCATION_API_KEY=(str, ''),
+    GITHUB_API_KEY=(str, ''),
+    GITHUB_ORGANIZATION=(str, 'veriganet'),
+    S3_BUCKET_PREFIX=(str, 'veriga')
 )
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'WARNING',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
+            'propagate': False,
+        },
+    },
+}
 
 # Set the project base directory
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

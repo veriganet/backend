@@ -16,6 +16,19 @@ blockchain_detail = views.BlockChainViewSet.as_view({
     'patch': 'partial_update',
     'delete': 'destroy',
 })
+blockchain_build_deploy = views.BlockChainBuildDeployViewSet.as_view({
+    'get': 'list',
+    'post': 'create',
+})
+blockchain_build_deploy_detail = views.BlockChainBuildDeployViewSet.as_view({
+    'get': 'retrieve',
+    'put': 'update',
+    'patch': 'partial_update',
+    'delete': 'destroy',
+})
+blockchain_build = views.BlockChainBuildViewSet.as_view({
+    'post': 'create',
+})
 user_detail = views.UserViewSet.as_view({
     'get': 'retrieve',
     'put': 'update',
@@ -99,7 +112,7 @@ user_user_profile_detail = views.UserProfileViewSet.as_view({
     'patch': 'partial_update',
     'delete': 'destroy',
 })
-user_geo_location = views.UserGeoLocationViewSet.as_view({
+user_geo_location = views.GeoLocationUserViewSet.as_view({
     'get': 'retrieve',
 })
 # user - end
@@ -116,6 +129,9 @@ urlpatterns = [
     # admin
     path('admin/blockchains/', blockchain_list, name='blockchain_list'),
     path('admin/blockchains/<int:pk>', blockchain_detail, name='blockchain_detail'),
+    path('admin/blockchains/build/<int:pk>', blockchain_build, name='blockchain_build'),
+    path('admin/blockchains/deploys/', blockchain_build_deploy, name='blockchain_build_deploy'),
+    path('admin/blockchains/deploys/<int:pk>', blockchain_build_deploy_detail, name='blockchain_build_deploy_detail'),
     path('admin/organizations/', organization_list, name='organization_list'),
     path('admin/organizations/<int:pk>', organization_detail, name='organization_detail'),
     path('admin/users/', user_list, name='user_list'),
