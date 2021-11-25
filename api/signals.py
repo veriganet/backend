@@ -6,7 +6,7 @@ from django_rest_passwordreset.signals import reset_password_token_created
 from rest_framework.reverse import reverse
 from templated_email import send_templated_mail
 
-from api.models import Profile
+from api.models import Profile, BlockChain
 
 
 @receiver(post_save, sender=User)

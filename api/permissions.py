@@ -7,13 +7,12 @@ class IsOwner(permissions.BasePermission):
     view, edit, update or delete
     """
 
-    def has_object_permission(self, request, view, obj):
-        # Read permissions are allowed to any request,
-        # so we'll always allow GET, HEAD or OPTIONS requests.
-        if request.method in permissions.SAFE_METHODS:
-            return True
+    # for view permission
+    def has_permission(self, request, view):
+        return request.user and request.user.is_authenticated
 
-        # view, edit, update or delete permissions only allowed to owner
+    # for object level permission
+    def has_object_permission(self, request, view, obj):
         return obj.owner == request.user
 
 
@@ -23,11 +22,13 @@ class IsUserOwner(permissions.BasePermission):
     view, edit, update or delete
     """
 
-    def has_object_permission(self, request, view, obj):
-        if request.method in permissions.SAFE_METHODS:
-            return True
+    # for view permission
+    def has_permission(self, request, view):
+        return request.user and request.user.is_authenticated
 
-        return obj.id == request.user.id
+    # for object level permission
+    def has_object_permission(self, request, view, obj):
+        return obj.id == request.user
 
 
 class IsCreatedBy(permissions.BasePermission):
@@ -36,11 +37,10 @@ class IsCreatedBy(permissions.BasePermission):
     view
     """
 
-    def has_object_permission(self, request, view, obj):
-        # Read permissions are allowed to any request,
-        # so we'll always allow GET, HEAD or OPTIONS requests.
-        if request.method in permissions.SAFE_METHODS:
-            return True
+    # for view permission
+    def has_permission(self, request, view):
+        return request.user and request.user.is_authenticated
 
-        # view, edit, update or delete permissions only allowed to owner
+    # for object level permission
+    def has_object_permission(self, request, view, obj):
         return obj.created_by == request.user
