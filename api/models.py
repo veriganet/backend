@@ -156,12 +156,30 @@ class BlockChain(models.Model):
 
 
 class BlockChainBuildDeploy(models.Model):
+    BUILD = 1
+    DEPLOY = 2
+    TYPES = (
+        (BUILD, 'Build'),
+        (DEPLOY, 'Deploy'),
+    )
     block_chain = models.ForeignKey(BlockChain, on_delete=models.CASCADE, related_name='block_chain')
     build_id = models.IntegerField(null=False)
     build_no = models.IntegerField(null=False)
-    status = models.CharField(max_length=128, null=True, default=None)
+    created_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(User,
+                                   on_delete=models.CASCADE,
+                                   related_name='block_chain_build_deploy_created_by',
+                                   default=1)
     owner = models.ForeignKey(User, on_delete=models.CASCADE,
                               related_name='block_chain_build_deploy_owner')
+    # BlockChainBuildDeploy id
+    parent_build_id = models.IntegerField(null=True, default=None)
+    parent_build_number = models.IntegerField(null=True, default=None)
+    status = models.CharField(max_length=128, null=True, default=None)
+    type = models.PositiveIntegerField(
+        choices=TYPES,
+        default=BUILD
+    )
 
     class Meta:
         ordering = ['id']
