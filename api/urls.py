@@ -38,9 +38,6 @@ blockchain_build_build = views.BlockChainBuildViewSet.as_view({
 blockchain_build_detail = views.BlockChainBuildViewSet.as_view({
     'get': 'retrieve',
 })
-blockchain_build_restart = views.BlockChainBuildViewSet.as_view({
-    'post': 'restart',
-})
 blockchain_deploy = views.BlockChainDeployViewSet.as_view({
     'get': 'list',
 })
@@ -157,7 +154,6 @@ urlpatterns = [
     path('admin/blockchains/builds/<int:pk>', blockchain_build_list, name='blockchain_build_list'),
     path('admin/blockchains/builds/build/<int:pk>', blockchain_build_build, name='blockchain_build_build'),
     path('admin/blockchains/builds/detail/<int:pk>', blockchain_build_detail, name='blockchain_build_detail'),
-    path('admin/blockchains/builds/restart/<int:pk>', blockchain_build_restart, name='blockchain_build_restart'),
     path('admin/blockchains/builds-deploys/', blockchain_build_deploy, name='blockchain_build_deploy'),
     path('admin/blockchains/builds-deploys/<int:pk>', blockchain_build_deploy_detail, name='blockchain_build_deploy_detail'),
     path('admin/blockchains/deploys/', blockchain_deploy, name='blockchain_deploy'),

@@ -132,10 +132,6 @@ class BlockChainBuildViewSet(viewsets.ViewSet):
     Retrieve: Retrieves build details from remote build server
     <pk> BlockChainBuildDeploy ID
     GET blockchains/builds/detail/<pk>
-
-    Restart: Restarts build
-    <pk> BlockChainBuildDeploy ID
-    POST blockchains/builds/restart/<pk>
     """
 
     permission_classes = [IsAdminUser]
@@ -149,114 +145,136 @@ class BlockChainBuildViewSet(viewsets.ViewSet):
     def create(self, request, *args, **kwargs):
         pk = self.kwargs['pk']
         block_chain = get_object_or_404(BlockChain, id=pk)
-        build_deploy = BlockChainBuildDeploy.objects.filter(block_chain=block_chain).last()
+        build_deploy = BlockChainBuildDeploy.objects.filter(block_chain=block_chain, type=1).last()
+
         if block_chain.s3_bucket_name != "None":
             s3_bucket_name = block_chain.s3_bucket_name
         else:
             s3_bucket_name = env('S3_BUCKET_PREFIX')+'-'+block_chain.abbreviation
 
-        data = {}
-        headers = {"Authorization": "Bearer %s" % env('DRONE_TOKEN')}
-        params = 'ABBREVIATION='+block_chain.abbreviation+'&' \
-                 'BLOCK_NAME='+block_chain.name+'&' \
-                 'DEBUG='+block_chain.debug+'&' \
-                 'ENABLE_CUSTOM_DOMAIN='+str(block_chain.enable_custom_domain)+'&' \
-                 'CUSTOM_DOMAIN='+block_chain.custom_domain+'&' \
-                 'DOMAINSVC='+block_chain.domain_svc+'&' \
-                 'FAUCET_PUBLIC_KEY='+block_chain.faucet_public_key+'&' \
-                 'LANDING_PUBLIC_KEY='+block_chain.landing_public_key+'&' \
-                 'CANARY_BETA_PUBLIC_KEY='+block_chain.canary_beta_public_key+'&' \
-                 'CANARY_LIVE_PUBLIC_KEY='+block_chain.canary_live_public_key+'&' \
-                 'CANARY_TEST_PUBLIC_KEY='+block_chain.canary_test_public_key+'&' \
-                 'GENESIS_DEV_PUBLIC_KEY='+block_chain.genesis_dev_public_key+'&' \
-                 'GENESIS_DEV_PRIVATE_KEY='+block_chain.genesis_dev_private_key+'&' \
-                 'GENESIS_DEV_ACCOUNT='+block_chain.genesis_dev_account+'&' \
-                 'GENESIS_DEV_WORK='+block_chain.genesis_dev_work+'&' \
-                 'GENESIS_DEV_SIGNATURE='+block_chain.genesis_dev_signature+'&' \
-                 'GENESIS_BETA_PUBLIC_KEY='+block_chain.genesis_beta_public_key+'&' \
-                 'GENESIS_BETA_ACCOUNT='+block_chain.genesis_beta_account+'&' \
-                 'GENESIS_BETA_WORK='+block_chain.genesis_beta_work+'&' \
-                 'GENESIS_BETA_SIGNATURE='+block_chain.genesis_beta_signature+'&' \
-                 'GENESIS_LIVE_PUBLIC_KEY='+block_chain.genesis_live_public_key+'&' \
-                 'GENESIS_LIVE_ACCOUNT='+block_chain.genesis_live_account+'&' \
-                 'GENESIS_LIVE_WORK='+block_chain.genesis_live_work+'&' \
-                 'GENESIS_LIVE_SIGNATURE='+block_chain.genesis_live_signature+'&' \
-                 'GENESIS_TEST_PUBLIC_KEY='+block_chain.genesis_test_public_key+'&' \
-                 'GENESIS_TEST_ACCOUNT='+block_chain.genesis_test_account+'&' \
-                 'GENESIS_TEST_WORK='+block_chain.genesis_test_work+'&' \
-                 'GENESIS_TEST_SIGNATURE='+block_chain.genesis_test_signature+'&' \
-                 'BETA_PRE_CONFIGURED_REP0='+block_chain.beta_pre_conf_rep_public_key_0+'&' \
-                 'BETA_PRE_CONFIGURED_REP1='+block_chain.beta_pre_conf_rep_public_key_1+'&' \
-                 'LIVE_PRE_CONFIGURED_REP0='+block_chain.live_pre_conf_rep_public_key_0+'&' \
-                 'LIVE_PRE_CONFIGURED_REP1='+block_chain.live_pre_conf_rep_public_key_1+'&' \
-                 'LIVE_PRE_CONFIGURED_REP2='+block_chain.live_pre_conf_rep_public_key_2+'&' \
-                 'LIVE_PRE_CONFIGURED_REP3='+block_chain.live_pre_conf_rep_public_key_3+'&' \
-                 'LIVE_PRE_CONFIGURED_REP4='+block_chain.live_pre_conf_rep_public_key_4+'&' \
-                 'LIVE_PRE_CONFIGURED_REP5='+block_chain.live_pre_conf_rep_public_key_5+'&' \
-                 'LIVE_PRE_CONFIGURED_REP6='+block_chain.live_pre_conf_rep_public_key_6+'&' \
-                 'LIVE_PRE_CONFIGURED_REP7='+block_chain.live_pre_conf_rep_public_key_7+'&' \
-                 'LIVE_PRE_CONFIGURED_ACCOUNT_REP0='+block_chain.live_pre_conf_rep_account_0+'&' \
-                 'LIVE_PRE_CONFIGURED_ACCOUNT_REP1='+block_chain.live_pre_conf_rep_account_1+'&' \
-                 'LIVE_PRE_CONFIGURED_ACCOUNT_REP2='+block_chain.live_pre_conf_rep_account_2+'&' \
-                 'LIVE_PRE_CONFIGURED_ACCOUNT_REP3='+block_chain.live_pre_conf_rep_account_3+'&' \
-                 'LIVE_PRE_CONFIGURED_ACCOUNT_REP4='+block_chain.live_pre_conf_rep_account_4+'&' \
-                 'LIVE_PRE_CONFIGURED_ACCOUNT_REP5='+block_chain.live_pre_conf_rep_account_5+'&' \
-                 'LIVE_PRE_CONFIGURED_ACCOUNT_REP6='+block_chain.live_pre_conf_rep_account_6+'&' \
-                 'LIVE_PRE_CONFIGURED_ACCOUNT_REP7='+block_chain.live_pre_conf_rep_account_7+'&' \
-                 'LOGGING='+block_chain.logging+'&' \
-                 'NANO_NETWORK='+block_chain.nano_network+'&' \
-                 'NAULT_VERSION='+block_chain.nault_version+'&' \
-                 'LIVE_NODE_PEERING_PORT='+block_chain.live_node_peering_port+'&' \
-                 'BETA_NODE_PEERING_PORT='+block_chain.beta_node_peering_port+'&' \
-                 'TEST_NODE_PEERING_PORT='+block_chain.test_node_peering_port+'&' \
-                 'LIVE_RPC_PORT='+block_chain.live_rpc_port+'&' \
-                 'BETA_RPC_PORT='+block_chain.beta_rpc_port+'&' \
-                 'TEST_RPC_PORT='+block_chain.test_rpc_port+'&' \
-                 'NODE_VERSION='+block_chain.node_version+'&' \
-                 'BINARY_PUBLIC='+str(block_chain.binary_public)+'&' \
-                 'S3_BUCKET_NAME='+s3_bucket_name+'&' \
-                 'NUMBER_OF_PEERS='+str(block_chain.number_of_peers)
+        # create placeholder BuildDeploy object
+        if build_deploy is None:
+            build = BlockChainBuildDeploy.objects.create(
+                build_id=0,
+                build_no=0,
+                block_chain_id=pk,
+                created_by=request.user,
+                status='created',
+                type=1,
+                owner=request.user
+            )
+            build.save()
+        else:
+            if build_deploy.status not in ['success', 'running', 'failure', 'created']:
+                build = BlockChainBuildDeploy.objects.create(
+                    build_id=0,
+                    build_no=0,
+                    block_chain_id=pk,
+                    created_by=request.user,
+                    status='created',
+                    type=1,
+                    owner=request.user
+                )
+                build.save()
+            else:
+                build = BlockChainBuildDeploy.objects.filter(block_chain=block_chain, type=1).last()
 
-        endpoint = env('DRONE_SERVER') + \
-                   '/api/repos/' + \
-                   env('BUILD_DEPLOY_ORG') + \
-                   '/' + \
-                   env('BUILD_DEPLOY_REPO') + \
-                   '/builds?branch=' + \
-                   env('BUILD_DEPLOY_BRANCH') + \
-                   '&' + \
-                   params
-        endpoint_get = env('DRONE_SERVER') + \
-                   '/api/repos/' + \
-                   env('BUILD_DEPLOY_ORG') + \
-                   '/' + \
-                   env('BUILD_DEPLOY_REPO') + \
-                   '/builds/' + \
-                   str(build_deploy.build_no)
         try:
-            # get status of build
-            response_get = requests.get(endpoint_get, data=data, headers=headers)
-            d_get = response_get.json()
-
-            if d_get['status'] == 'running':
-                return Response({"status": "running",
-                                 "detail": "Can not create build while there is a running build!"})
-            elif d_get['status'] == 'pending':
+            if build.status == 'success':
+                return Response({
+                    "status": "success",
+                    "detail": "Can not create build!"
+                })
+            elif build.status == 'running':
+                return Response({
+                    "status": "running",
+                    "detail": "Can not create build while there is a running build!"
+                })
+            elif build.status == 'pending':
                 return Response({"status": "pending",
                                  "detail": "Can not create blockchain while there is a pending build!"})
             else:
+                data = {}
+                headers = {"Authorization": "Bearer %s" % env('DRONE_TOKEN')}
+                params = 'ABBREVIATION='+block_chain.abbreviation+'&' \
+                         'BLOCK_NAME='+block_chain.name+'&' \
+                         'DEBUG='+block_chain.debug+'&' \
+                         'ENABLE_CUSTOM_DOMAIN='+str(block_chain.enable_custom_domain)+'&' \
+                         'CUSTOM_DOMAIN='+block_chain.custom_domain+'&' \
+                         'DOMAINSVC='+block_chain.domain_svc+'&' \
+                         'FAUCET_PUBLIC_KEY='+block_chain.faucet_public_key+'&' \
+                         'LANDING_PUBLIC_KEY='+block_chain.landing_public_key+'&' \
+                         'CANARY_BETA_PUBLIC_KEY='+block_chain.canary_beta_public_key+'&' \
+                         'CANARY_LIVE_PUBLIC_KEY='+block_chain.canary_live_public_key+'&' \
+                         'CANARY_TEST_PUBLIC_KEY='+block_chain.canary_test_public_key+'&' \
+                         'GENESIS_DEV_PUBLIC_KEY='+block_chain.genesis_dev_public_key+'&' \
+                         'GENESIS_DEV_PRIVATE_KEY='+block_chain.genesis_dev_private_key+'&' \
+                         'GENESIS_DEV_ACCOUNT='+block_chain.genesis_dev_account+'&' \
+                         'GENESIS_DEV_WORK='+block_chain.genesis_dev_work+'&' \
+                         'GENESIS_DEV_SIGNATURE='+block_chain.genesis_dev_signature+'&' \
+                         'GENESIS_BETA_PUBLIC_KEY='+block_chain.genesis_beta_public_key+'&' \
+                         'GENESIS_BETA_ACCOUNT='+block_chain.genesis_beta_account+'&' \
+                         'GENESIS_BETA_WORK='+block_chain.genesis_beta_work+'&' \
+                         'GENESIS_BETA_SIGNATURE='+block_chain.genesis_beta_signature+'&' \
+                         'GENESIS_LIVE_PUBLIC_KEY='+block_chain.genesis_live_public_key+'&' \
+                         'GENESIS_LIVE_ACCOUNT='+block_chain.genesis_live_account+'&' \
+                         'GENESIS_LIVE_WORK='+block_chain.genesis_live_work+'&' \
+                         'GENESIS_LIVE_SIGNATURE='+block_chain.genesis_live_signature+'&' \
+                         'GENESIS_TEST_PUBLIC_KEY='+block_chain.genesis_test_public_key+'&' \
+                         'GENESIS_TEST_ACCOUNT='+block_chain.genesis_test_account+'&' \
+                         'GENESIS_TEST_WORK='+block_chain.genesis_test_work+'&' \
+                         'GENESIS_TEST_SIGNATURE='+block_chain.genesis_test_signature+'&' \
+                         'BETA_PRE_CONFIGURED_REP0='+block_chain.beta_pre_conf_rep_public_key_0+'&' \
+                         'BETA_PRE_CONFIGURED_REP1='+block_chain.beta_pre_conf_rep_public_key_1+'&' \
+                         'LIVE_PRE_CONFIGURED_REP0='+block_chain.live_pre_conf_rep_public_key_0+'&' \
+                         'LIVE_PRE_CONFIGURED_REP1='+block_chain.live_pre_conf_rep_public_key_1+'&' \
+                         'LIVE_PRE_CONFIGURED_REP2='+block_chain.live_pre_conf_rep_public_key_2+'&' \
+                         'LIVE_PRE_CONFIGURED_REP3='+block_chain.live_pre_conf_rep_public_key_3+'&' \
+                         'LIVE_PRE_CONFIGURED_REP4='+block_chain.live_pre_conf_rep_public_key_4+'&' \
+                         'LIVE_PRE_CONFIGURED_REP5='+block_chain.live_pre_conf_rep_public_key_5+'&' \
+                         'LIVE_PRE_CONFIGURED_REP6='+block_chain.live_pre_conf_rep_public_key_6+'&' \
+                         'LIVE_PRE_CONFIGURED_REP7='+block_chain.live_pre_conf_rep_public_key_7+'&' \
+                         'LIVE_PRE_CONFIGURED_ACCOUNT_REP0='+block_chain.live_pre_conf_rep_account_0+'&' \
+                         'LIVE_PRE_CONFIGURED_ACCOUNT_REP1='+block_chain.live_pre_conf_rep_account_1+'&' \
+                         'LIVE_PRE_CONFIGURED_ACCOUNT_REP2='+block_chain.live_pre_conf_rep_account_2+'&' \
+                         'LIVE_PRE_CONFIGURED_ACCOUNT_REP3='+block_chain.live_pre_conf_rep_account_3+'&' \
+                         'LIVE_PRE_CONFIGURED_ACCOUNT_REP4='+block_chain.live_pre_conf_rep_account_4+'&' \
+                         'LIVE_PRE_CONFIGURED_ACCOUNT_REP5='+block_chain.live_pre_conf_rep_account_5+'&' \
+                         'LIVE_PRE_CONFIGURED_ACCOUNT_REP6='+block_chain.live_pre_conf_rep_account_6+'&' \
+                         'LIVE_PRE_CONFIGURED_ACCOUNT_REP7='+block_chain.live_pre_conf_rep_account_7+'&' \
+                         'LOGGING='+block_chain.logging+'&' \
+                         'NANO_NETWORK='+block_chain.nano_network+'&' \
+                         'NAULT_VERSION='+block_chain.nault_version+'&' \
+                         'LIVE_NODE_PEERING_PORT='+block_chain.live_node_peering_port+'&' \
+                         'BETA_NODE_PEERING_PORT='+block_chain.beta_node_peering_port+'&' \
+                         'TEST_NODE_PEERING_PORT='+block_chain.test_node_peering_port+'&' \
+                         'LIVE_RPC_PORT='+block_chain.live_rpc_port+'&' \
+                         'BETA_RPC_PORT='+block_chain.beta_rpc_port+'&' \
+                         'TEST_RPC_PORT='+block_chain.test_rpc_port+'&' \
+                         'NODE_VERSION='+block_chain.node_version+'&' \
+                         'BINARY_PUBLIC='+str(block_chain.binary_public)+'&' \
+                         'S3_BUCKET_NAME='+s3_bucket_name+'&' \
+                         'NUMBER_OF_PEERS='+str(block_chain.number_of_peers)+'&' \
+                         'VERIGA_BUILD_DEPLOY_ID='+str(build.id)
+
+                endpoint = env('DRONE_SERVER') + \
+                           '/api/repos/' + \
+                           env('BUILD_DEPLOY_ORG') + \
+                           '/' + \
+                           env('BUILD_DEPLOY_REPO') + \
+                           '/builds?branch=' + \
+                           env('BUILD_DEPLOY_BRANCH') + \
+                           '&' + \
+                           params
+
                 # send the api request
                 response = requests.post(endpoint, data=data, headers=headers)
                 d = response.json()
-                # create BlockChainBuildDeploy object
-                BlockChainBuildDeploy.objects.update_or_create(
-                    build_id=d['id'],
-                    build_no=d['number'],
-                    block_chain_id=pk,
-                    created_by=request.user,
-                    status=d['status'],
-                    type=1,
-                    owner=request.user)
+                # update placeholder BlockChainBuildDeploy object with real data
+                build.build_id = d['id']
+                build.build_no = d['number']
+                build.status = 'running'
+                build.save()
         except requests.exceptions.RequestException as response:
             return response
 
@@ -266,44 +284,6 @@ class BlockChainBuildViewSet(viewsets.ViewSet):
         build_deploy = BlockChainBuildDeploy.objects.filter(type=1).values()
 
         return Response(build_deploy)
-
-    def restart(self, request, *args, **kwargs):
-        pk = self.kwargs['pk']
-        build = get_object_or_404(BlockChainBuildDeploy, id=pk, type=1)
-
-        data = {}
-        headers = {"Authorization": "Bearer %s" % env('DRONE_TOKEN')}
-        endpoint = env('DRONE_SERVER') + \
-                   '/api/repos/' + \
-                   env('BUILD_DEPLOY_ORG') + \
-                   '/' + \
-                   env('BUILD_DEPLOY_REPO') + \
-                   '/builds/' + \
-                   str(build.build_no)
-        try:
-            # get status of build
-            response_get = requests.get(endpoint, data=data, headers=headers)
-            d_get = response_get.json()
-
-            if d_get['status'] == 'success':
-                return Response({"status": "success", "detail": "Can not restart successful build!"})
-            elif d_get['status'] == 'running':
-                return Response({"status": "running", "detail": "Can not restart running build!"})
-            elif d_get['status'] == 'pending':
-                return Response({"status": "pending", "detail": "Build is pending to be started."})
-            else:
-                # send the api request
-                response = requests.post(endpoint, data=data, headers=headers)
-                # create BlockChainBuildDeploy object
-                d = response.json()
-                build.build_id = d['id']
-                build.build_no = d['number']
-                build.status = d['status']
-                build.save()
-        except requests.exceptions.RequestException as response:
-            return response
-
-        return Response(response.json())
 
     def retrieve(self, request, *args, **kwargs):
         pk = self.kwargs['pk']
@@ -352,34 +332,80 @@ class BlockChainDeployViewSet(viewsets.ViewSet):
 
     def blockchain_deploy_list(self, request, *args, **kwargs):
         pk = self.kwargs['pk']
-        build_deploy = BlockChainBuildDeploy.objects.filter(block_chain=pk).values()
+        build_deploy = BlockChainBuildDeploy.objects.filter(block_chain=pk, type=2).values()
 
         return Response(build_deploy)
 
     def create(self, request, *args, **kwargs):
         pk = self.kwargs['pk']
         block_chain = get_object_or_404(BlockChain, id=pk)
-        build_deploy = BlockChainBuildDeploy.objects.filter(block_chain=block_chain, status='success').last()
+        build = BlockChainBuildDeploy.objects.filter(block_chain=block_chain, type=1).last()
+        deploy = BlockChainBuildDeploy.objects.filter(block_chain=block_chain, type=2).last()
+
         if block_chain.s3_bucket_name != "None":
             s3_bucket_name = block_chain.s3_bucket_name
         else:
             s3_bucket_name = env('S3_BUCKET_PREFIX')+'-'+block_chain.abbreviation
 
-        data = {}
-        headers = {"Authorization": "Bearer %s" % env('DRONE_TOKEN')}
-        params = 'ABBREVIATION=' + block_chain.abbreviation
-        endpoint = env('DRONE_SERVER') + \
-                   '/api/repos/' + \
-                   env('BUILD_DEPLOY_ORG') + \
-                   '/' + \
-                   env('BUILD_DEPLOY_REPO') + \
-                   '/builds/' + \
-                   str(build_deploy.build_no) + \
-                   '/promote?target=live&' + params
+        # create placeholder BuildDeploy object
+        if deploy is None:
+            deploy = BlockChainBuildDeploy.objects.create(
+                build_id=0,
+                build_no=0,
+                block_chain_id=pk,
+                created_by=request.user,
+                status='created',
+                type=2,
+                owner=request.user,
+                parent_build_id=build.id,
+                parent_build_number=build.build_no
+            )
+            deploy.save()
+        else:
+            if deploy.status not in ['success', 'deploying', 'failure', 'created']:
+                deploy = BlockChainBuildDeploy.objects.create(
+                    build_id=0,
+                    build_no=0,
+                    block_chain_id=pk,
+                    created_by=request.user,
+                    status='created',
+                    type=2,
+                    owner=request.user,
+                    parent_build_id=build.id,
+                    parent_build_number=build.build_no
+                )
+                deploy.save()
 
         try:
-            # send the api request
-            response = requests.post(endpoint, data=data, headers=headers)
+            if deploy.status == 'success':
+                return Response({
+                    "status": "success",
+                    "detail": "Can not create deploy!"
+                })
+            elif deploy.status == 'deploying':
+                return Response({
+                    "status": "deploying",
+                    "detail": "Can not create deploy while there is a running deploy!"
+                })
+            elif deploy.status == 'pending':
+                return Response({"status": "pending",
+                                 "detail": "Can not create deploy while there is a pending deploy!"})
+            else:
+                data = {}
+                headers = {"Authorization": "Bearer %s" % env('DRONE_TOKEN')}
+                params = 'ABBREVIATION=' + block_chain.abbreviation + \
+                         '&VERIGA_BUILD_DEPLOY_ID=' + str(deploy.id)
+                endpoint = env('DRONE_SERVER') + \
+                           '/api/repos/' + \
+                           env('BUILD_DEPLOY_ORG') + \
+                           '/' + \
+                           env('BUILD_DEPLOY_REPO') + \
+                           '/builds/' + \
+                           str(build.build_no) + \
+                           '/promote?target=live&' + params
+                # send the api request
+                response = requests.post(endpoint, data=data, headers=headers)
+
             if 'null' in response.text:
                 return Response({"detail": "Request returned %s! I have a bad feeling about this." % response.json()})
         except requests.exceptions.RequestException as response:
@@ -388,17 +414,11 @@ class BlockChainDeployViewSet(viewsets.ViewSet):
         if response.status_code is 200:
             # create BlockChainBuildDeploy object
             d = response.json()
-            BlockChainBuildDeploy.objects.create(
-                build_id=d['id'],
-                build_no=d['number'],
-                block_chain_id=pk,
-                created_by=request.user,
-                status='deploying',
-                type=2,
-                owner=request.user,
-                parent_build_id=build_deploy.id,
-                parent_build_number=d['parent']
-            )
+
+            deploy.build_id = d['id']
+            deploy.build_no = d['number']
+            deploy.status = 'deploying'
+            deploy.save()
 
         return Response(response.json())
 
