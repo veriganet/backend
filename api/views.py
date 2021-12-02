@@ -1,10 +1,10 @@
 import logging
 import jwt
 import requests
+from django.db.models.functions import Now
 from django.contrib.auth.models import User
 from django.contrib.sites.shortcuts import get_current_site
 from django.conf import settings
-import django.core.exceptions as django_core_exceptions
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
@@ -40,8 +40,10 @@ class APIRootView(APIView):
         admin_urls = {
             'admin/blockchains': reverse('blockchain_list', request=request, format=format),
             'admin/blockchains/builds-deploys': reverse('blockchain_build_deploy', request=request, format=format),
-            'admin/blockchains/deploys': reverse('blockchain_deploy', request=request, format=format),
             'admin/blockchains/builds': reverse('blockchain_build', request=request, format=format),
+            'admin/blockchains/deploys': reverse('blockchain_deploy', request=request, format=format),
+            'admin/blockchains/terminations': reverse('blockchain_terminate', request=request,
+                                                                        format=format),
             'admin/organizations': reverse('organization_list', request=request, format=format),
             'admin/users': reverse('user_list', request=request, format=format),
             'admin/users/profiles': reverse('user_profile', request=request, format=format),
@@ -322,10 +324,6 @@ class BlockChainDeployViewSet(viewsets.ViewSet):
     Retrieve: Retrieves blockchain deployment details
     <pk> BlockChainBuildDeploy ID
     GET blockchains/deploys/detail/<pk>
-
-    Restart: Restarts blockchain deployment
-    <pk> BlockChainBuildDeploy ID
-    POST blockchains/deploys/restart/<pk>
     """
 
     permission_classes = [IsAdminUser]
@@ -342,13 +340,16 @@ class BlockChainDeployViewSet(viewsets.ViewSet):
         build = BlockChainBuildDeploy.objects.filter(block_chain=block_chain, type=1).last()
         deploy = BlockChainBuildDeploy.objects.filter(block_chain=block_chain, type=2).last()
 
+        # can be removed if not used
         if block_chain.s3_bucket_name != "None":
             s3_bucket_name = block_chain.s3_bucket_name
         else:
             s3_bucket_name = env('S3_BUCKET_PREFIX')+'-'+block_chain.abbreviation
 
-        # create placeholder BuildDeploy object
+        # create placeholder object
+        # check if object is None
         if deploy is None:
+            # create deploy object
             deploy = BlockChainBuildDeploy.objects.create(
                 build_id=0,
                 build_no=0,
@@ -360,9 +361,12 @@ class BlockChainDeployViewSet(viewsets.ViewSet):
                 parent_build_id=build.id,
                 parent_build_number=build.build_no
             )
+            # save object object
             deploy.save()
         else:
+            # check if current status of object is not in
             if deploy.status not in ['success', 'deploying', 'failure', 'created']:
+                # create deploy object
                 deploy = BlockChainBuildDeploy.objects.create(
                     build_id=0,
                     build_no=0,
@@ -374,6 +378,7 @@ class BlockChainDeployViewSet(viewsets.ViewSet):
                     parent_build_id=build.id,
                     parent_build_number=build.build_no
                 )
+                # save object
                 deploy.save()
 
         try:
@@ -406,12 +411,14 @@ class BlockChainDeployViewSet(viewsets.ViewSet):
                 # send the api request
                 response = requests.post(endpoint, data=data, headers=headers)
 
+            # check if request returns None data
             if 'null' in response.text:
                 return Response({"detail": "Request returned %s! I have a bad feeling about this." % response.json()})
+
         except requests.exceptions.RequestException as response:
             return response
 
-        if response.status_code is 200:
+        if response.status_code == 200:
             # create BlockChainBuildDeploy object
             d = response.json()
 
@@ -443,6 +450,157 @@ class BlockChainDeployViewSet(viewsets.ViewSet):
                    env('BUILD_DEPLOY_REPO') + \
                    '/builds/' + \
                    str(build.build_no)
+        try:
+            # send the api request
+            response = requests.get(endpoint, data=data, headers=headers)
+        except requests.exceptions.RequestException as response:
+            return response
+
+        return Response(response.json())
+
+
+class BlockChainTerminateViewset(viewsets.ViewSet):
+    """
+    =========================
+    DANGER ZONE ============
+    =========================
+
+    Create, list, retrieve blockchain terminate task
+
+    Create: Terminates blockchain and removes all data
+    <pk> BlockChain ID
+    POST blockchains/terminations/terminate/<pk>
+
+    List: Lists termination tasks for blockchain
+    <pk> BlockChain ID
+    GET blockchains/terminations/<pk>
+
+    Retrieve: Retrieves blockchain termination details
+    <pk> BlockChainBuildDeploy ID
+    GET blockchains/terminations/detail/<pk>
+    """
+    def blockchain_terminate_list(self, request, *args, **kwargs):
+        pk = self.kwargs['pk']
+        build_deploy = BlockChainBuildDeploy.objects.filter(block_chain=pk, type=4).values()
+
+        return Response(build_deploy)
+
+    def create(self, request, *args, **kwargs):
+        pk = self.kwargs['pk']
+        block_chain = get_object_or_404(BlockChain, id=pk)
+        build_deploy = BlockChainBuildDeploy.objects.filter(block_chain=block_chain)
+        build = BlockChainBuildDeploy.objects.filter(block_chain=block_chain, type=1).last()
+        terminate = BlockChainBuildDeploy.objects.filter(block_chain=block_chain, type=4).last()
+
+        # can be removed if not used
+        if block_chain.s3_bucket_name != "None":
+            s3_bucket_name = block_chain.s3_bucket_name
+        else:
+            s3_bucket_name = env('S3_BUCKET_PREFIX')+'-'+block_chain.abbreviation
+
+        # create placeholder object
+        # check if object is None
+        if terminate is None:
+            # create deploy object
+            terminate = BlockChainBuildDeploy.objects.create(
+                build_id=0,
+                build_no=0,
+                block_chain_id=pk,
+                created_by=request.user,
+                status='created',
+                type=4,
+                owner=request.user,
+                parent_build_id=build.id,
+                parent_build_number=build.build_no
+            )
+            # save object object
+            terminate.save()
+        else:
+            # check if current status of object is not in
+            if terminate.status not in ['success', 'terminating', 'failure', 'created']:
+                # create deploy object
+                terminate = BlockChainBuildDeploy.objects.create(
+                    build_id=0,
+                    build_no=0,
+                    block_chain_id=pk,
+                    created_by=request.user,
+                    status='created',
+                    type=4,
+                    owner=request.user,
+                    parent_build_id=build.id,
+                    parent_build_number=build.build_no
+                )
+                # save object
+                terminate.save()
+
+        try:
+            status_black_list = ['success', 'terminating', 'pending']
+            if terminate.status in status_black_list:
+                return Response({
+                    "status": "%s" % terminate.status,
+                    "detail": "Can not terminate deploy!"
+                })
+            else:
+                data = {}
+                headers = {"Authorization": "Bearer %s" % env('DRONE_TOKEN')}
+                params = 'ABBREVIATION=' + block_chain.abbreviation + \
+                         '&VERIGA_BUILD_DEPLOY_ID=' + str(terminate.id)
+                endpoint = env('DRONE_SERVER') + \
+                           '/api/repos/' + \
+                           env('BUILD_DEPLOY_ORG') + \
+                           '/' + \
+                           env('BUILD_DEPLOY_REPO') + \
+                           '/builds/' + \
+                           str(build.build_no) + \
+                           '/promote?target=live-terminate&' + params
+                # send the api request
+                response = requests.post(endpoint, data=data, headers=headers)
+
+            # check if request returns None data
+            if 'null' in response.text:
+                return Response({"detail": "Request returned %s! I have a bad feeling about this." % response.json()})
+
+        except requests.exceptions.RequestException as response:
+            return response
+
+        if response.status_code == 200:
+            # create BlockChainBuildDeploy object
+            d = response.json()
+            terminate.build_id = d['id']
+            terminate.build_no = d['number']
+            terminate.status = 'terminating'
+            terminate.save()
+
+            # delete blockchain
+            block_chain.deleted = True
+            block_chain.deleted_at = Now()
+            block_chain.deleted_by = request.user
+            block_chain.save()
+
+            # delete BuilDeploy for blockchain
+            build_deploy.update(deleted=True, deleted_at=Now(), deleted_by=request.user)
+
+        return Response(response.json())
+
+    def list(self, request, *args, **kwargs):
+        build_deploy = BlockChainBuildDeploy.objects.filter(type=4).values()
+
+        return Response(build_deploy)
+
+
+    def retrieve(self, request, *args, **kwargs):
+        pk = self.kwargs['pk']
+        terminate = get_object_or_404(BlockChainBuildDeploy, id=pk, type=4)
+
+        data = {}
+        headers = {"Authorization": "Bearer %s" % env('DRONE_TOKEN')}
+        endpoint = env('DRONE_SERVER') + \
+                   '/api/repos/' + \
+                   env('BUILD_DEPLOY_ORG') + \
+                   '/' + \
+                   env('BUILD_DEPLOY_REPO') + \
+                   '/builds/' + \
+                   str(terminate.build_no)
         try:
             # send the api request
             response = requests.get(endpoint, data=data, headers=headers)

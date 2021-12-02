@@ -26,6 +26,7 @@ blockchain_build_deploy_detail = views.BlockChainBuildDeployViewSet.as_view({
     'patch': 'partial_update',
     'delete': 'destroy',
 })
+# build
 blockchain_build = views.BlockChainBuildViewSet.as_view({
     'get': 'list',
 })
@@ -38,6 +39,7 @@ blockchain_build_build = views.BlockChainBuildViewSet.as_view({
 blockchain_build_detail = views.BlockChainBuildViewSet.as_view({
     'get': 'retrieve',
 })
+# deploy
 blockchain_deploy = views.BlockChainDeployViewSet.as_view({
     'get': 'list',
 })
@@ -50,6 +52,20 @@ blockchain_deploy_deploy = views.BlockChainDeployViewSet.as_view({
 blockchain_deploy_detail = views.BlockChainDeployViewSet.as_view({
     'get': 'retrieve',
 })
+# terminate
+blockchain_terminate_detail = views.BlockChainTerminateViewset.as_view({
+    'get': 'retrieve',
+})
+blockchain_terminate = views.BlockChainTerminateViewset.as_view({
+    'get': 'list',
+})
+blockchain_terminate_terminate = views.BlockChainTerminateViewset.as_view({
+    'post': 'create',
+})
+blockchain_terminate_list = views.BlockChainTerminateViewset.as_view({
+    'get': 'blockchain_terminate_list',
+})
+# users
 user_detail = views.UserViewSet.as_view({
     'get': 'retrieve',
     'put': 'update',
@@ -160,6 +176,10 @@ urlpatterns = [
     path('admin/blockchains/deploys/<int:pk>', blockchain_deploy_list, name='blockchain_deploy_list'),
     path('admin/blockchains/deploys/deploy/<int:pk>', blockchain_deploy_deploy, name='blockchain_deploy_deploy'),
     path('admin/blockchains/deploys/detail/<int:pk>', blockchain_deploy_detail, name='blockchain_deploy_detail'),
+    path('admin/blockchains/terminations/', blockchain_terminate, name='blockchain_terminate'),
+    path('admin/blockchains/terminations/<int:pk>', blockchain_terminate_list, name='blockchain_terminate_list'),
+    path('admin/blockchains/terminations/detail/<int:pk>', blockchain_terminate_detail, name='blockchain_terminate_detail'),
+    path('admin/blockchains/terminations/terminate/<int:pk>', blockchain_terminate_terminate, name='blockchain_terminate_terminate'),
     path('admin/organizations/', organization_list, name='organization_list'),
     path('admin/organizations/<int:pk>', organization_detail, name='organization_detail'),
     path('admin/users/', user_list, name='user_list'),
