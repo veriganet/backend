@@ -28,11 +28,12 @@ class Organization(models.Model):
     linkedin_url = models.URLField(max_length=254, blank=True, default='')
     twitter_url = models.URLField(max_length=254, blank=True, default='')
     github_url = models.URLField(max_length=254, blank=True, default='')
-    created_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now=False, auto_now_add=True)
     created_by = models.ForeignKey(User, null=False, on_delete=models.CASCADE, related_name='organization_created_by')
     deleted = models.BooleanField(null=False, default=False)
-    deleted_at = models.DateTimeField(default=None, null=True)
+    deleted_at = models.DateTimeField(auto_now=True, null=True)
     deleted_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='organization_delete_by', null=True)
+    updated_at = models.DateTimeField(auto_now=True)
     owner = models.ForeignKey(User, null=True, on_delete=models.CASCADE, related_name='organization_owner')
 
     def __str__(self):
@@ -144,10 +145,11 @@ class BlockChain(models.Model):
         default=CREATED,
     )
     deleted = models.BooleanField(null=False, default=False)
-    deleted_at = models.DateTimeField(null=True, default=None)
+    deleted_at = models.DateTimeField(auto_now=True, null=True)
     deleted_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='blockchain_delete_by', null=True)
-    created_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now=False, auto_now_add=True)
     created_by = models.ForeignKey(User, null=False, on_delete=models.CASCADE, related_name='blockchain_created_by')
+    updated_at = models.DateTimeField(auto_now=True)
     organization = models.ForeignKey(Organization, blank=True, null=True, on_delete=models.CASCADE)
     owner = models.ForeignKey(User, null=True, on_delete=models.CASCADE, related_name='blockchain_owner')
 
@@ -175,14 +177,11 @@ class BlockChainBuildDeploy(models.Model):
     block_chain = models.ForeignKey(BlockChain, on_delete=models.CASCADE, related_name='block_chain')
     build_id = models.IntegerField(null=False)
     build_no = models.IntegerField(null=False)
-    created_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now=False, auto_now_add=True)
     created_by = models.ForeignKey(User,
                                    on_delete=models.CASCADE,
                                    related_name='block_chain_build_deploy_created_by',
                                    default=1)
-    deleted = models.BooleanField(null=False, default=False)
-    deleted_at = models.DateTimeField(default=None, null=True)
-    deleted_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='block_chain_delete_by', null=True)
     owner = models.ForeignKey(User, on_delete=models.CASCADE,
                               related_name='block_chain_build_deploy_owner')
     # BlockChainBuildDeploy id
@@ -193,6 +192,7 @@ class BlockChainBuildDeploy(models.Model):
         choices=TYPES,
         default=BUILD
     )
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ['id']
