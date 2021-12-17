@@ -129,6 +129,7 @@ class BlockChain(models.Model):
     live_pre_conf_rep_private_key_7 = models.CharField(max_length=64, blank=False)
     nano_network = models.CharField(max_length=64, blank=False, default='live')
     nault_version = models.CharField(max_length=64, blank=False, default='v1.15.0')
+    ninja_version = models.CharField(max_length=64, blank=False, default='663a5b24e2a8e1d423fc3311a6945cc0d234953e')
     live_node_peering_port = models.CharField(max_length=5, blank=False, default='7075')
     beta_node_peering_port = models.CharField(max_length=5, blank=False, default='54000')
     test_node_peering_port = models.CharField(max_length=5, blank=False, default='44000')
@@ -145,7 +146,7 @@ class BlockChain(models.Model):
         default=CREATED,
     )
     deleted = models.BooleanField(null=False, default=False)
-    deleted_at = models.DateTimeField(auto_now=True, null=True)
+    deleted_at = models.DateTimeField(null=True, default=None)
     deleted_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='blockchain_delete_by', null=True)
     created_at = models.DateTimeField(auto_now=False, auto_now_add=True)
     created_by = models.ForeignKey(User, null=False, on_delete=models.CASCADE, related_name='blockchain_created_by')

@@ -181,11 +181,27 @@ class BlockChainBuildViewSet(viewsets.ViewSet):
             else:
                 build = BlockChainBuildDeploy.objects.filter(block_chain=block_chain, type=1).last()
 
+        # get remote status of the build with drone api
+        url_status = env('DRONE_SERVER') + \
+                   '/api/repos/' + \
+                   env('BUILD_DEPLOY_ORG') + \
+                   '/' + \
+                   env('BUILD_DEPLOY_REPO') + \
+                   '/builds/' + \
+                   str(build.build_no)
+        response_status = request_to_drone_ci(method='GET', url=url_status)
+        d_status = response_status.json()
+        if 'status' in d_status:
+            job_status = d_status['status']
+            logger.debug("Found the values: %s" % job_status)
+        else:
+            job_status = None
+            logger.debug("Value of build status not found!")
+
         # check current status of the job before creating
-        if build.status in ['success', 'running', 'pending']:
+        if job_status in ['success', 'running', 'pending']:
             return Response({
-                "status": "%s" % build.status,
-                "detail": "Can not create build!"
+                "detail": "Can not start a new build! Current status: %s" % job_status
             })
 
         params = 'ABBREVIATION='+block_chain.abbreviation+'&' \
@@ -237,6 +253,7 @@ class BlockChainBuildViewSet(viewsets.ViewSet):
                  'LOGGING='+block_chain.logging+'&' \
                  'NANO_NETWORK='+block_chain.nano_network+'&' \
                  'NAULT_VERSION='+block_chain.nault_version+'&' \
+                 'NINJA_VERSION='+block_chain.ninja_version+'&' \
                  'LIVE_NODE_PEERING_PORT='+block_chain.live_node_peering_port+'&' \
                  'BETA_NODE_PEERING_PORT='+block_chain.beta_node_peering_port+'&' \
                  'TEST_NODE_PEERING_PORT='+block_chain.test_node_peering_port+'&' \
@@ -365,15 +382,26 @@ class BlockChainDeployViewSet(viewsets.ViewSet):
                 # save object
                 deploy.save()
 
-        if deploy.status in ['success', 'deploying', 'pending']:
+        # get remote status of the deployment with drone api
+        url_status = env('DRONE_SERVER') + \
+                   '/api/repos/' + \
+                   env('BUILD_DEPLOY_ORG') + \
+                   '/' + \
+                   env('BUILD_DEPLOY_REPO') + \
+                   '/builds/' + \
+                   str(deploy.build_no)
+        response_status = request_to_drone_ci(method='GET', url=url_status)
+        d_status = response_status.json()
+        if 'status' in d_status:
+            job_status = d_status['status']
+            logger.debug("Found the values: %s" % job_status)
+        else:
+            job_status = None
+            logger.debug("Value of build status not found!")
+
+        if job_status in ['success', 'running', 'pending']:
             return Response({
-                "status": "%s" % deploy.status,
-                "detail": "Can not create deploy!"
-            })
-        if build.status in ['running', 'pending']:
-            return Response({
-                "status": "%s" % build.status,
-                "detail": "Can not start deploy when build status is %s" % build.status
+                "detail": "Can not start a new deployment! Current status: %s" % job_status
             })
 
         params = 'ABBREVIATION=' + block_chain.abbreviation + \
@@ -501,6 +529,28 @@ class BlockChainTerminateViewset(viewsets.ViewSet):
                 )
                 # save object
                 terminate.save()
+
+        # get remote status of the deployment with drone api
+        url_status = env('DRONE_SERVER') + \
+                   '/api/repos/' + \
+                   env('BUILD_DEPLOY_ORG') + \
+                   '/' + \
+                   env('BUILD_DEPLOY_REPO') + \
+                   '/builds/' + \
+                   str(terminate.build_no)
+        response_status = request_to_drone_ci(method='GET', url=url_status)
+        d_status = response_status.json()
+        if 'status' in d_status:
+            job_status = d_status['status']
+            logger.debug("Found the values: %s" % job_status)
+        else:
+            job_status = None
+            logger.debug("Value of build status not found!")
+
+        if job_status in ['success', 'running', 'pending']:
+            return Response({
+                "detail": "Can not start a new termination job! Current status: %s" % job_status
+            })
 
         params = 'ABBREVIATION=' + block_chain.abbreviation + \
                  '&VERIGA_BUILD_DEPLOY_ID=' + str(terminate.id) + \
