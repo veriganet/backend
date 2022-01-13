@@ -69,6 +69,8 @@ class BlockChain(models.Model):
         (ERROR, 'Error'),
     )
     abbreviation = models.CharField(max_length=4, blank=False)
+    boompow_version = models.CharField(max_length=64, default='v3.0.1')
+    boompow_payout_address = models.CharField(max_length=128, blank=True)
     name = models.CharField(max_length=128, blank=True, default='')
     description = models.TextField(max_length=2048, blank=True, default='')
     debug = models.CharField(max_length=100, blank=False, default='INFO')
@@ -130,6 +132,9 @@ class BlockChain(models.Model):
     nano_network = models.CharField(max_length=64, blank=False, default='live')
     nault_version = models.CharField(max_length=64, blank=False, default='v1.15.0')
     ninja_version = models.CharField(max_length=64, blank=False, default='663a5b24e2a8e1d423fc3311a6945cc0d234953e')
+    proxy_version = models.CharField(max_length=64, blank=False, default='v1.4.4')
+    work_threshold_default = models.CharField(max_length=64, blank=False, default='fffffff800000000')
+    work_receive_threshold_default = models.CharField(max_length=64, blank=False, default='fffffe0000000000')
     live_node_peering_port = models.CharField(max_length=5, blank=False, default='7075')
     beta_node_peering_port = models.CharField(max_length=5, blank=False, default='54000')
     test_node_peering_port = models.CharField(max_length=5, blank=False, default='44000')

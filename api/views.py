@@ -205,6 +205,8 @@ class BlockChainBuildViewSet(viewsets.ViewSet):
             })
 
         params = 'ABBREVIATION='+block_chain.abbreviation+'&' \
+                 'BOOMPOW_VERSION='+block_chain.boompow_version+'&' \
+                 'BOOMPOW_PAYOUT_ADDRESS='+block_chain.boompow_payout_address+'&' \
                  'BLOCK_NAME='+block_chain.name+'&' \
                  'DEBUG='+block_chain.debug+'&' \
                  'ENABLE_CUSTOM_DOMAIN='+str(block_chain.enable_custom_domain)+'&' \
@@ -254,6 +256,7 @@ class BlockChainBuildViewSet(viewsets.ViewSet):
                  'NANO_NETWORK='+block_chain.nano_network+'&' \
                  'NAULT_VERSION='+block_chain.nault_version+'&' \
                  'NINJA_VERSION='+block_chain.ninja_version+'&' \
+                 'PROXY_VERSION='+block_chain.ninja_version+'&' \
                  'LIVE_NODE_PEERING_PORT='+block_chain.live_node_peering_port+'&' \
                  'BETA_NODE_PEERING_PORT='+block_chain.beta_node_peering_port+'&' \
                  'TEST_NODE_PEERING_PORT='+block_chain.test_node_peering_port+'&' \
@@ -264,6 +267,8 @@ class BlockChainBuildViewSet(viewsets.ViewSet):
                  'BINARY_PUBLIC='+str(block_chain.binary_public)+'&' \
                  'S3_BUCKET_NAME='+s3_bucket_name+'&' \
                  'NUMBER_OF_PEERS='+str(block_chain.number_of_peers)+'&' \
+                 'WORK_THRESHOLD_DEFAULT='+str(block_chain.work_threshold_default)+'&' \
+                 'WORK_RECEIVE_THRESHOLD_DEFAULT='+str(block_chain.work_receive_threshold_default)+'&' \
                  'VERIGA_BUILD_DEPLOY_ID='+str(build.id)
 
         url = env('DRONE_SERVER') + \
