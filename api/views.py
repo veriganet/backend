@@ -255,8 +255,10 @@ class BlockChainBuildViewSet(viewsets.ViewSet):
                  'LOGGING='+block_chain.logging+'&' \
                  'NANO_NETWORK='+block_chain.nano_network+'&' \
                  'NAULT_VERSION='+block_chain.nault_version+'&' \
+                 'NAULT_PRICE_URL='+block_chain.nault_price_url+'&' \
                  'NINJA_VERSION='+block_chain.ninja_version+'&' \
-                 'PROXY_VERSION='+block_chain.ninja_version+'&' \
+                 'PROXY_VERSION='+block_chain.proxy_version+'&' \
+                 'PROXY_PRICE_URL='+block_chain.proxy_price_url+'&' \
                  'LIVE_NODE_PEERING_PORT='+block_chain.live_node_peering_port+'&' \
                  'BETA_NODE_PEERING_PORT='+block_chain.beta_node_peering_port+'&' \
                  'TEST_NODE_PEERING_PORT='+block_chain.test_node_peering_port+'&' \
