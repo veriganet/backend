@@ -59,7 +59,6 @@ class BlockChain(models.Model):
     PENDING = 4
     SUSPENDED = 4
     ERROR = 5
-
     STATUS = (
         (CREATED, 'Created'),
         (DEPLOYING, 'Deploying'),
@@ -68,7 +67,27 @@ class BlockChain(models.Model):
         (SUSPENDED, 'Suspended'),
         (ERROR, 'Error'),
     )
-    abbreviation = models.CharField(max_length=4, blank=False)
+
+    # [epoch1],[epoch2],[receive]
+    BANANO = 'fffffe0000000000,fffffff000000000,0000000000000000'
+    NANO = 'ffffffc000000000,fffffff800000000,fffffe0000000000'
+    WORK_THRESHOLD = (
+        (BANANO, 'BANANO'),
+        (NANO, 'NANO')
+    )
+
+    MILLION = '1000000000000000000000000000000'
+    BILLION = '100000000000000000000000000000'
+    TEN_BILLION = '10000000000000000000000000000'
+    HUNDRED_BILLION = '1000000000000000000000000000'
+    SUPPLY_MULTIPLIER = (
+        (MILLION,         'MILLIONs'),
+        (BILLION,         'BILLIONs'),
+        (TEN_BILLION,     'TEN_BILLIONs'),
+        (HUNDRED_BILLION, 'HUNDRED_BILLIONs'),
+    )
+
+    abbreviation = models.CharField(max_length=4, blank=False, unique=True)
     boompow_version = models.CharField(max_length=64, default='v3.0.1')
     boompow_payout_address = models.CharField(max_length=128, blank=True)
     name = models.CharField(max_length=128, blank=True, default='')
@@ -129,12 +148,17 @@ class BlockChain(models.Model):
     live_pre_conf_rep_private_key_5 = models.CharField(max_length=64, blank=False)
     live_pre_conf_rep_private_key_6 = models.CharField(max_length=64, blank=False)
     live_pre_conf_rep_private_key_7 = models.CharField(max_length=64, blank=False)
+    k8s_cluster = models.CharField(max_length=64, blank=False, default='k8s0')
     nano_network = models.CharField(max_length=64, blank=False, default='live')
     nault_version = models.CharField(max_length=64, blank=False, default='v1.15.0')
-    nault_price_url = models.CharField(max_length=1024, blank=False, default='https://api.coingecko.com/api/v3/coins/nano?localization=false&tickers=false&market_data=true')
+    nault_price_url = models.CharField(max_length=1024, blank=False, default='None')
+    nault_store_key = models.CharField(max_length=128, blank=True, default='None')
+    nault_hid_rep_help = models.BooleanField(default=True)
     ninja_version = models.CharField(max_length=64, blank=False, default='663a5b24e2a8e1d423fc3311a6945cc0d234953e')
     proxy_version = models.CharField(max_length=64, blank=False, default='v1.4.4')
-    proxy_price_url = models.CharField(max_length=1024, blank=False, default='https://api.coinpaprika.com/v1/tickers/nano-nano')
+    proxy_price_url = models.CharField(max_length=1024, blank=False, default='None')
+    supply_multiplier = models.CharField(max_length=128, choices=SUPPLY_MULTIPLIER, default=BILLION)
+    work_threshold = models.CharField(max_length=128, choices=WORK_THRESHOLD,default=NANO)
     work_threshold_default = models.CharField(max_length=64, blank=False, default='fffffff800000000')
     work_receive_threshold_default = models.CharField(max_length=64, blank=False, default='fffffe0000000000')
     live_node_peering_port = models.CharField(max_length=5, blank=False, default='7075')
@@ -148,10 +172,7 @@ class BlockChain(models.Model):
     binary_public = models.BooleanField(blank=False, default=False)
     s3_bucket_name = models.CharField(max_length=256, blank=True, default='')
     number_of_peers = models.IntegerField(blank=False, default=2)
-    status = models.PositiveIntegerField(
-        choices=STATUS,
-        default=CREATED,
-    )
+    status = models.PositiveIntegerField(choices=STATUS, default=CREATED)
     deleted = models.BooleanField(null=False, default=False)
     deleted_at = models.DateTimeField(null=True, default=None)
     deleted_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='blockchain_delete_by', null=True)

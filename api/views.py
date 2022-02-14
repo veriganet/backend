@@ -252,10 +252,13 @@ class BlockChainBuildViewSet(viewsets.ViewSet):
                  'LIVE_PRE_CONFIGURED_ACCOUNT_REP5='+block_chain.live_pre_conf_rep_account_5+'&' \
                  'LIVE_PRE_CONFIGURED_ACCOUNT_REP6='+block_chain.live_pre_conf_rep_account_6+'&' \
                  'LIVE_PRE_CONFIGURED_ACCOUNT_REP7='+block_chain.live_pre_conf_rep_account_7+'&' \
+                 'K8S_CLUSTER='+block_chain.k8s_cluster+'&' \
                  'LOGGING='+block_chain.logging+'&' \
                  'NANO_NETWORK='+block_chain.nano_network+'&' \
                  'NAULT_VERSION='+block_chain.nault_version+'&' \
                  'NAULT_PRICE_URL='+block_chain.nault_price_url+'&' \
+                 'NAULT_STORE_KEY='+block_chain.nault_store_key+'&' \
+                 'NAULT_HIDE_REP_HELP='+str(block_chain.nault_hid_rep_help)+'&' \
                  'NINJA_VERSION='+block_chain.ninja_version+'&' \
                  'PROXY_VERSION='+block_chain.proxy_version+'&' \
                  'PROXY_PRICE_URL='+block_chain.proxy_price_url+'&' \
@@ -269,8 +272,10 @@ class BlockChainBuildViewSet(viewsets.ViewSet):
                  'BINARY_PUBLIC='+str(block_chain.binary_public)+'&' \
                  'S3_BUCKET_NAME='+s3_bucket_name+'&' \
                  'NUMBER_OF_PEERS='+str(block_chain.number_of_peers)+'&' \
+                 'WORK_THRESHOLD='+str(block_chain.work_threshold)+'&' \
                  'WORK_THRESHOLD_DEFAULT='+str(block_chain.work_threshold_default)+'&' \
                  'WORK_RECEIVE_THRESHOLD_DEFAULT='+str(block_chain.work_receive_threshold_default)+'&' \
+                 'SUPPLY_MULTIPLIER='+str(block_chain.supply_multiplier)+'&' \
                  'VERIGA_BUILD_DEPLOY_ID='+str(build.id)
 
         url = env('DRONE_SERVER') + \
