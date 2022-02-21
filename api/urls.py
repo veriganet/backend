@@ -94,6 +94,16 @@ user_profile_detail = views.ProfileViewSet.as_view({
     'patch': 'partial_update',
     'delete': 'destroy',
 })
+droneciserver_list = views.DroneCIServerViewSet.as_view({
+    'get': 'list',
+    'post': 'create'
+})
+droneciserver_detail = views.DroneCIServerViewSet.as_view({
+    'get': 'retrieve',
+    'put': 'update',
+    'patch': 'partial_update',
+    'delete': 'destroy',
+})
 organization_list = views.OrganizationViewSet.as_view({
     'get': 'list',
     'post': 'create'
@@ -180,6 +190,8 @@ urlpatterns = [
     path('admin/blockchains/terminations/<int:pk>', blockchain_terminate_list, name='blockchain_terminate_list'),
     path('admin/blockchains/terminations/detail/<int:pk>', blockchain_terminate_detail, name='blockchain_terminate_detail'),
     path('admin/blockchains/terminations/terminate/<int:pk>', blockchain_terminate_terminate, name='blockchain_terminate_terminate'),
+    path('admin/droneciservers/', droneciserver_list, name='droneciserver_list'),
+    path('admin/droneciservers/<int:pk>', droneciserver_detail, name='droneciserver_detail'),
     path('admin/organizations/', organization_list, name='organization_list'),
     path('admin/organizations/<int:pk>', organization_detail, name='organization_detail'),
     path('admin/users/', user_list, name='user_list'),

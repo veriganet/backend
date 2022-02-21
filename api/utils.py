@@ -3,9 +3,9 @@ import json
 from backend.settings import env
 
 
-def request_to_drone_ci(url, method, data=None, headers=None):
+def request_to_drone_ci(url, method, token, data=None, headers=None):
     if headers is None:
-        headers = {"Authorization": "Bearer %s" % env('DRONE_TOKEN')}
+        headers = {"Authorization": "Bearer %s" % token}
     if data is None:
         data = {}
 

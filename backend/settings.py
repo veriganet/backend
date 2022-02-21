@@ -21,7 +21,8 @@ env = environ.Env(
     GEO_LOCATION_API_KEY=(str, ''),
     GITHUB_API_KEY=(str, ''),
     GITHUB_ORGANIZATION=(str, 'veriganet'),
-    S3_BUCKET_PREFIX=(str, 'veriga')
+    S3_BUCKET_PREFIX=(str, 'veriga'),
+    FIELD_ENCRYPTION_KEY=(str, '')
 )
 
 LOGGING = {
@@ -61,6 +62,7 @@ DEBUG = env('DEBUG')
 
 ALLOWED_HOSTS = env('ALLOWED_HOSTS')
 
+FIELD_ENCRYPTION_KEY = env('FIELD_ENCRYPTION_KEY')
 
 # Application definition
 
@@ -76,6 +78,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'django_rest_passwordreset',
     'api.apps.ApiConfig',
+    'encrypted_model_fields',
 ]
 
 MIDDLEWARE = [

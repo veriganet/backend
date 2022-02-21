@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.contrib.auth.models import AbstractUser
+from encrypted_model_fields.fields import EncryptedCharField
 
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -192,6 +193,22 @@ class BlockChain(models.Model):
         ordering = ['id']
 
 
+class DroneCIServer(models.Model):
+    name = models.CharField(max_length=128, blank=False)
+    description = models.TextField(max_length=2048, blank=True, default='')
+    server = models.URLField(max_length=254, blank=True, default='')
+    token = EncryptedCharField(max_length=254)
+
+    def __str__(self):
+        return "%s - %s" % (self.id, self.name)
+
+    def __int__(self):
+        return self.id
+
+    class Meta:
+        ordering = ['id']
+
+
 class BlockChainBuildDeploy(models.Model):
     BUILD = 1
     DEPLOY = 2
@@ -221,7 +238,10 @@ class BlockChainBuildDeploy(models.Model):
         choices=TYPES,
         default=BUILD
     )
+    droneci_server = models.ForeignKey(DroneCIServer, blank=True, null=True, on_delete=models.CASCADE,
+                                       related_name='droneci_server', default=None)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ['id']
+

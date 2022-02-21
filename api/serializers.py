@@ -4,7 +4,7 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 
 from api.views import Profile
-from api.models import Organization, BlockChain, BlockChainBuildDeploy
+from api.models import Organization, BlockChain, BlockChainBuildDeploy, DroneCIServer
 
 
 class OwnerPrimaryKeyRelatedField(serializers.PrimaryKeyRelatedField):
@@ -107,6 +107,15 @@ class CustomTokenObtainPairSerializer(EmailTokenObtainSerializer):
         data["access"] = str(refresh.access_token)
 
         return data
+
+
+class DroneCIServerSerializer(serializers.ModelSerializer):
+    """
+    Serializer for DroneCIServer model
+    """
+    class Meta:
+        model = DroneCIServer
+        fields = '__all__'
 
 
 class OrganizationSerializer(serializers.ModelSerializer):

@@ -16,12 +16,12 @@ from rest_framework import viewsets, status
 from templated_email import send_templated_mail
 
 from api.permissions import IsOwner, IsUserOwner
-from api.models import Profile, Organization, BlockChain, BlockChainBuildDeploy
+from api.models import Profile, Organization, BlockChain, BlockChainBuildDeploy, DroneCIServer
 from api.serializers import CustomTokenObtainPairSerializer, UserSerializer, \
     RegisterSerializer, RegisterUserSerializer, ProfileSerializer, \
     OrganizationSerializer, BlockChainSerializer, UserUserSerializer, \
     UserProfileSerializer, BlockChainUserSerializer, OrganizationUserSerializer, \
-    BlockChainUserUpdatePatchSerializer, BlockChainBuildDeploySerializer
+    BlockChainUserUpdatePatchSerializer, BlockChainBuildDeploySerializer, DroneCIServerSerializer
 from api.utils import request_to_drone_ci
 from backend.settings import env
 
@@ -44,6 +44,7 @@ class APIRootView(APIView):
             'admin/blockchains/deploys': reverse('blockchain_deploy', request=request, format=format),
             'admin/blockchains/terminations': reverse('blockchain_terminate', request=request,
                                                                         format=format),
+            'admin/droneciservers': reverse('droneciserver_list', request=request, format=format),
             'admin/organizations': reverse('organization_list', request=request, format=format),
             'admin/users': reverse('user_list', request=request, format=format),
             'admin/users/profiles': reverse('user_profile', request=request, format=format),
@@ -148,6 +149,7 @@ class BlockChainBuildViewSet(viewsets.ViewSet):
         pk = self.kwargs['pk']
         block_chain = get_object_or_404(BlockChain, id=pk)
         build_deploy = BlockChainBuildDeploy.objects.filter(block_chain=block_chain, type=1).last()
+        droneci_server = get_object_or_404(DroneCIServer, id=build_deploy.droneci_server.id)
 
         if block_chain.s3_bucket_name != "None":
             s3_bucket_name = block_chain.s3_bucket_name
@@ -182,14 +184,14 @@ class BlockChainBuildViewSet(viewsets.ViewSet):
                 build = BlockChainBuildDeploy.objects.filter(block_chain=block_chain, type=1).last()
 
         # get remote status of the build with drone api
-        url_status = env('DRONE_SERVER') + \
+        url_status = droneci_server.server + \
                    '/api/repos/' + \
                    env('BUILD_DEPLOY_ORG') + \
                    '/' + \
                    env('BUILD_DEPLOY_REPO') + \
                    '/builds/' + \
                    str(build.build_no)
-        response_status = request_to_drone_ci(method='GET', url=url_status)
+        response_status = request_to_drone_ci(method='GET', url=url_status, token=droneci_server.token)
         d_status = response_status.json()
         if 'status' in d_status:
             job_status = d_status['status']
@@ -278,17 +280,17 @@ class BlockChainBuildViewSet(viewsets.ViewSet):
                  'SUPPLY_MULTIPLIER='+str(block_chain.supply_multiplier)+'&' \
                  'VERIGA_BUILD_DEPLOY_ID='+str(build.id)
 
-        url = env('DRONE_SERVER') + \
-                   '/api/repos/' + \
-                   env('BUILD_DEPLOY_ORG') + \
-                   '/' + \
-                   env('BUILD_DEPLOY_REPO') + \
-                   '/builds?branch=' + \
-                   env('BUILD_DEPLOY_BRANCH') + \
-                   '&' + \
-                   params
+        url = droneci_server.server + \
+              '/api/repos/' + \
+              env('BUILD_DEPLOY_ORG') + \
+              '/' + \
+              env('BUILD_DEPLOY_REPO') + \
+              '/builds?branch=' + \
+              env('BUILD_DEPLOY_BRANCH') + \
+              '&' + \
+              params
 
-        response = request_to_drone_ci(method='POST', url=url)
+        response = request_to_drone_ci(method='POST', url=url, token=droneci_server.token)
 
         # update placeholder BlockChainBuildDeploy object with real data
         d = response.json()
@@ -308,8 +310,9 @@ class BlockChainBuildViewSet(viewsets.ViewSet):
     def retrieve(self, request, *args, **kwargs):
         pk = self.kwargs['pk']
         build = get_object_or_404(BlockChainBuildDeploy, id=pk, type=1)
+        droneci_server = get_object_or_404(DroneCIServer, id=build.droneci_server.id)
 
-        url = env('DRONE_SERVER') + \
+        url = droneci_server.server + \
                    '/api/repos/' + \
                    env('BUILD_DEPLOY_ORG') + \
                    '/' + \
@@ -317,7 +320,7 @@ class BlockChainBuildViewSet(viewsets.ViewSet):
                    '/builds/' + \
                    str(build.build_no)
 
-        response = request_to_drone_ci(method='GET', url=url)
+        response = request_to_drone_ci(method='GET', url=url, token=droneci_server.token)
 
         return Response(response.json())
 
@@ -352,6 +355,7 @@ class BlockChainDeployViewSet(viewsets.ViewSet):
         block_chain = get_object_or_404(BlockChain, id=pk)
         build = BlockChainBuildDeploy.objects.filter(block_chain=block_chain, type=1).last()
         deploy = BlockChainBuildDeploy.objects.filter(block_chain=block_chain, type=2).last()
+        droneci_server = get_object_or_404(DroneCIServer, id=deploy.droneci_server.id)
 
         # can be removed if not used
         if block_chain.s3_bucket_name != "None":
@@ -395,14 +399,14 @@ class BlockChainDeployViewSet(viewsets.ViewSet):
                 deploy.save()
 
         # get remote status of the deployment with drone api
-        url_status = env('DRONE_SERVER') + \
+        url_status = droneci_server.server + \
                    '/api/repos/' + \
                    env('BUILD_DEPLOY_ORG') + \
                    '/' + \
                    env('BUILD_DEPLOY_REPO') + \
                    '/builds/' + \
                    str(deploy.build_no)
-        response_status = request_to_drone_ci(method='GET', url=url_status)
+        response_status = request_to_drone_ci(method='GET', url=url_status, token=droneci_server.token)
         d_status = response_status.json()
         if 'status' in d_status:
             job_status = d_status['status']
@@ -418,7 +422,7 @@ class BlockChainDeployViewSet(viewsets.ViewSet):
 
         params = 'ABBREVIATION=' + block_chain.abbreviation + \
                  '&VERIGA_BUILD_DEPLOY_ID=' + str(deploy.id)
-        url = env('DRONE_SERVER') + \
+        url = droneci_server.server + \
                    '/api/repos/' + \
                    env('BUILD_DEPLOY_ORG') + \
                    '/' + \
@@ -428,7 +432,7 @@ class BlockChainDeployViewSet(viewsets.ViewSet):
                    '/promote?target=live&' + params
 
         # send the api request
-        response = request_to_drone_ci(method='POST', url=url)
+        response = request_to_drone_ci(method='POST', url=url, token=droneci_server.token)
 
         # check if request returns None data
         if 'null' in response.text:
@@ -455,15 +459,16 @@ class BlockChainDeployViewSet(viewsets.ViewSet):
     def retrieve(self, request, *args, **kwargs):
         pk = self.kwargs['pk']
         build = get_object_or_404(BlockChainBuildDeploy, id=pk, type=2)
+        droneci_server = get_object_or_404(DroneCIServer, id=build.droneci_server.id)
 
-        url = env('DRONE_SERVER') + \
+        url = droneci_server.server + \
                    '/api/repos/' + \
                    env('BUILD_DEPLOY_ORG') + \
                    '/' + \
                    env('BUILD_DEPLOY_REPO') + \
                    '/builds/' + \
                    str(build.build_no)
-        response = request_to_drone_ci(method='GET', url=url)
+        response = request_to_drone_ci(method='GET', url=url, token=droneci_server.token)
 
         return Response(response.json())
 
@@ -500,6 +505,7 @@ class BlockChainTerminateViewset(viewsets.ViewSet):
         build_deploy = BlockChainBuildDeploy.objects.filter(block_chain=block_chain)
         build = BlockChainBuildDeploy.objects.filter(block_chain=block_chain, type=1).last()
         terminate = BlockChainBuildDeploy.objects.filter(block_chain=block_chain, type=4).last()
+        droneci_server = get_object_or_404(DroneCIServer, id=terminate.droneci_server.id)
 
         # can be removed if not used
         if block_chain.s3_bucket_name != "None":
@@ -543,14 +549,14 @@ class BlockChainTerminateViewset(viewsets.ViewSet):
                 terminate.save()
 
         # get remote status of the deployment with drone api
-        url_status = env('DRONE_SERVER') + \
+        url_status = droneci_server.server + \
                    '/api/repos/' + \
                    env('BUILD_DEPLOY_ORG') + \
                    '/' + \
                    env('BUILD_DEPLOY_REPO') + \
                    '/builds/' + \
                    str(terminate.build_no)
-        response_status = request_to_drone_ci(method='GET', url=url_status)
+        response_status = request_to_drone_ci(method='GET', url=url_status, token=droneci_server.token)
         d_status = response_status.json()
         if 'status' in d_status:
             job_status = d_status['status']
@@ -567,7 +573,7 @@ class BlockChainTerminateViewset(viewsets.ViewSet):
         params = 'ABBREVIATION=' + block_chain.abbreviation + \
                  '&VERIGA_BUILD_DEPLOY_ID=' + str(terminate.id) + \
                  '&VERIGA_BLOCK_CHAIN_ID=' + str(terminate.block_chain.id)
-        url = env('DRONE_SERVER') + \
+        url = droneci_server.server + \
                    '/api/repos/' + \
                    env('BUILD_DEPLOY_ORG') + \
                    '/' + \
@@ -575,7 +581,7 @@ class BlockChainTerminateViewset(viewsets.ViewSet):
                    '/builds/' + \
                    str(build.build_no) + \
                    '/promote?target=live-terminate&' + params
-        response = request_to_drone_ci(method='POST', url=url)
+        response = request_to_drone_ci(method='POST', url=url, token=droneci_server.token)
 
         # check if request returns None data
         if 'null' in response.text:
@@ -599,17 +605,27 @@ class BlockChainTerminateViewset(viewsets.ViewSet):
     def retrieve(self, request, *args, **kwargs):
         pk = self.kwargs['pk']
         terminate = get_object_or_404(BlockChainBuildDeploy, id=pk, type=4)
+        droneci_server = get_object_or_404(DroneCIServer, id=terminate.droneci_server.id)
 
-        url = env('DRONE_SERVER') + \
+        url = droneci_server.server + \
                    '/api/repos/' + \
                    env('BUILD_DEPLOY_ORG') + \
                    '/' + \
                    env('BUILD_DEPLOY_REPO') + \
                    '/builds/' + \
                    str(terminate.build_no)
-        response = request_to_drone_ci(method='GET', url=url)
+        response = request_to_drone_ci(method='GET', url=url, token=droneci_server.token)
 
         return Response(response.json())
+
+
+class DroneCIServerViewSet(viewsets.ModelViewSet):
+    """
+    List, retrieve, update actions for user DroneCI Servers
+    """
+    queryset = DroneCIServer.objects.all()
+    serializer_class = DroneCIServerSerializer
+    permission_classes = [IsAuthenticated, IsAdminUser]
 
 
 class UserViewSet(viewsets.ModelViewSet):
