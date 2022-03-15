@@ -149,7 +149,6 @@ class BlockChainBuildViewSet(viewsets.ViewSet):
         pk = self.kwargs['pk']
         block_chain = get_object_or_404(BlockChain, id=pk)
         build_deploy = BlockChainBuildDeploy.objects.filter(block_chain=block_chain, type=1).last()
-        droneci_server = get_object_or_404(DroneCIServer, id=build_deploy.droneci_server.id)
 
         if block_chain.s3_bucket_name != "None":
             s3_bucket_name = block_chain.s3_bucket_name
@@ -163,6 +162,7 @@ class BlockChainBuildViewSet(viewsets.ViewSet):
                 build_no=0,
                 block_chain_id=pk,
                 created_by=request.user,
+                droneci_server_id=1,
                 status='created',
                 type=1,
                 owner=request.user
@@ -175,6 +175,7 @@ class BlockChainBuildViewSet(viewsets.ViewSet):
                     build_no=0,
                     block_chain_id=pk,
                     created_by=request.user,
+                    droneci_server_id=1,
                     status='created',
                     type=1,
                     owner=request.user
@@ -182,6 +183,9 @@ class BlockChainBuildViewSet(viewsets.ViewSet):
                 build.save()
             else:
                 build = BlockChainBuildDeploy.objects.filter(block_chain=block_chain, type=1).last()
+
+        # get droneci_server
+        droneci_server = get_object_or_404(DroneCIServer, id=build_deploy.droneci_server.id)
 
         # get remote status of the build with drone api
         url_status = droneci_server.server + \
@@ -355,7 +359,6 @@ class BlockChainDeployViewSet(viewsets.ViewSet):
         block_chain = get_object_or_404(BlockChain, id=pk)
         build = BlockChainBuildDeploy.objects.filter(block_chain=block_chain, type=1).last()
         deploy = BlockChainBuildDeploy.objects.filter(block_chain=block_chain, type=2).last()
-        droneci_server = get_object_or_404(DroneCIServer, id=deploy.droneci_server.id)
 
         # can be removed if not used
         if block_chain.s3_bucket_name != "None":
@@ -372,6 +375,7 @@ class BlockChainDeployViewSet(viewsets.ViewSet):
                 build_no=0,
                 block_chain_id=pk,
                 created_by=request.user,
+                droneci_server_id=1,
                 status='created',
                 type=2,
                 owner=request.user,
@@ -389,6 +393,7 @@ class BlockChainDeployViewSet(viewsets.ViewSet):
                     build_no=0,
                     block_chain_id=pk,
                     created_by=request.user,
+                    droneci_server_id=1,
                     status='created',
                     type=2,
                     owner=request.user,
@@ -397,6 +402,9 @@ class BlockChainDeployViewSet(viewsets.ViewSet):
                 )
                 # save object
                 deploy.save()
+
+        # get droneci server
+        droneci_server = get_object_or_404(DroneCIServer, id=deploy.droneci_server.id)
 
         # get remote status of the deployment with drone api
         url_status = droneci_server.server + \
