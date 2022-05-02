@@ -1,0 +1,38 @@
+kind: pipeline
+type: kubernetes
+name: backend
+
+steps:
+  - name: build-push-image
+    image: veriganet/dind-awscli
+    volumes:
+      - name: dockersock
+        path: /var/run
+    settings:
+      from_secret: docker_secret_veriga
+    environment:
+      DOCKER_API_KEY:
+        from_secret: docker_api_key
+      ECR: veriganet
+      REPO_NAME: backend
+      VERSION: V22.1
+    commands:
+      - sleep 10 # give docker enough time to start
+      - docker login -u veriganet -p $DOCKER_API_KEY
+      - docker build -t $ECR/$REPO_NAME:$VERSION -f Dockerfile .
+      - docker push $ECR/$REPO_NAME:$VERSION
+    when:
+      event:
+        - push
+
+services:
+- name: docker
+  image: docker:dind
+  privileged: true
+  volumes:
+  - name: dockersock
+    path: /var/run
+
+volumes:
+- name: dockersock
+  temp: {}

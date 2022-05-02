@@ -238,8 +238,8 @@ class BlockChainBuildDeploy(models.Model):
         choices=TYPES,
         default=BUILD
     )
-    droneci_server = models.ForeignKey(DroneCIServer, blank=True, null=True, on_delete=models.CASCADE,
-                                       related_name='droneci_server', default=None)
+    droneci_server = models.ForeignKey(DroneCIServer, on_delete=models.CASCADE,
+                                       related_name='droneci_server', default=1)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
