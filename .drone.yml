@@ -4,7 +4,7 @@ name: backend
 
 steps:
   - name: build-push-image
-    image: veriganet/dind-awscli
+    image: veriganet/base-image:dind-awscli
     volumes:
       - name: dockersock
         path: /var/run
