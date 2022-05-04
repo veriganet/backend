@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Chart.Name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ .Chart.Name }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Chart.Name }}
+  template:
+    metadata:
+      annotations:
+        vault.security.banzaicloud.io/vault-addr: "https://vault.vault:8200"
+        vault.security.banzaicloud.io/vault-role: "{{ .Chart.Name }}"
+        vault.security.banzaicloud.io/vault-skip-verify: "true"
+      labels:
+        app: {{ .Chart.Name }}
+    spec:
+      serviceAccountName: {{ .Chart.Name }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: DEBUG
+              value: "{{ .Values.app.debug }}"
+            - name: SECRET_KEY
+              value: "{{ .Values.app.secretKey }}"
+            - name: DATABASE_URL
+              value: "{{ .Values.app.databaseURL }}"
+            - name: ALLOWED_HOSTS
+              value: "{{ .Values.app.allowedHosts }}"
+            - name: EMAIL_URL
+              value: "{{ .Values.app.emailURL }}"
+            - name: GEO_LOCATION_API_URL
+              value: "{{ .Values.app.geoLocationAPIURL }}"
+            - name: GEO_LOCATION_API_KEY
+              value: "{{ .Values.app.geoLocationAPIKey }}"
+            - name: GITHUB_API_KEY
+              value: "{{ .Values.app.githubAPIKey }}"
+            - name: DRONE_TOKEN
+              value: "{{ .Values.app.droneToken }}"
+            - name: BUILD_DEPLOY_REPO
+              value: "{{ .Values.app.buildDeployRepo }}"
+            - name: FIELD_ENCRYPTION_KEY
+              value: "{{ .Values.app.fieldEncryptionKey }}"
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+          resources: {{ toYaml .Values.resources | nindent 12 }}
+      imagePullSecrets:
+        - name: registry

@@ -1,0 +1,35 @@
+app:
+  debug: "off"
+  secretKey: "vault:secret/data/backend/#secret_key"
+  databaseURL: "vault:secret/data/backend/#database_url"
+  allowedHosts: "127.0.0.1,localhost,174.92.112.52,142.114.51.64"
+  emailURL: "smtp://127.0.0.1:1025"
+  geoLocationAPIURL: "https://api.ipgeolocation.io/ipgeo"
+  geoLocationAPIKey: "vault:secret/data/backend/#geo_location_api_key"
+  githubAPIKey: "vault:secret/data/backend/#github_api_key"
+  droneToken: "vault:secret/data/backend/#drone_token"
+  buildDeployRepo: build-deploy
+  fieldEncryptionKey: "vault:secret/data/backend/#field_encryption_key"
+
+image:
+  repository: veriganet/backend
+  tag: V22.1
+  pullPolicy: IfNotPresent
+
+ingress:
+  enabled: true
+  host:
+
+service:
+  type: ClusterIP
+  port: 8000
+
+resources:
+  requests:
+    cpu: "50m"
+    memory: "256Mi"
+  limits:
+    cpu: "200m"
+    memory: "256Mi"
+
+replicaCount: 2

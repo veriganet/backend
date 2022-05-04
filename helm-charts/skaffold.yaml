@@ -1,0 +1,30 @@
+apiVersion: skaffold/v2beta26
+kind: Config
+profiles:
+  - name: pre
+    deploy:
+      kubectl:
+        manifests:
+          - ./pre.yaml
+  - name: stg
+    deploy:
+      helm:
+        releases:
+          - name: backend-stg
+            chartPath: ./helm-charts/backend
+            namespace: backend-stg
+            setValues:
+              image.tag: stg
+              ingress.host: api-stg.veriga.net
+              vault.role: backend
+  - name: prod
+    deploy:
+      helm:
+        releases:
+          - name: backend
+            chartPath: ./helm-charts/backend
+            namespace: backend
+            setValues:
+              image.tag: V22.1
+              ingress.host: api.veriga.net
+              vault.role: backend
