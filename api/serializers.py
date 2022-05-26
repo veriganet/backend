@@ -4,7 +4,7 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 
 from api.views import Profile
-from api.models import Organization, BlockChain, BlockChainBuildDeploy, DroneCIServer
+from api.models import Organization, BlockChain, BlockChainBuildDeploy, DroneCIServer, Contact
 
 
 class OwnerPrimaryKeyRelatedField(serializers.PrimaryKeyRelatedField):
@@ -115,6 +115,20 @@ class DroneCIServerSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = DroneCIServer
+        fields = '__all__'
+
+
+class ContactSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Contact form
+    """
+    name = serializers.CharField(max_length=128)
+    email = serializers.EmailField(max_length=254, required=True)
+    phone = serializers.CharField(max_length=64)
+    message = serializers.CharField(max_length=2048)
+
+    class Meta:
+        model = Contact
         fields = '__all__'
 
 

@@ -245,3 +245,15 @@ class BlockChainBuildDeploy(models.Model):
     class Meta:
         ordering = ['id']
 
+
+class Contact(models.Model):
+    name = models.CharField(max_length=512)
+    email = models.EmailField(max_length=254)
+    phone = models.CharField(max_length=64)
+    message = models.CharField(max_length=2048)
+
+    def __str__(self):
+        return self.email
+
+    class Meta:
+        ordering = ['id']

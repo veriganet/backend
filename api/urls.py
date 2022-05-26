@@ -167,7 +167,9 @@ user_geo_location = views.GeoLocationUserViewSet.as_view({
 #
 # public - start
 #
-
+contact = views.ContactViewSet.as_view({
+    'post': 'create',
+})
 # public - end
 
 urlpatterns = [
@@ -212,6 +214,7 @@ urlpatterns = [
     path('user/profile/', user_user_profile_detail, name='user_user_profile_detail'),
     path('user/user/', user_user_detail, name='user_user_detail'),
     # public
+    path('contact/', contact, name='contact'),
     path('register/', register_user, name='register_user'),
     path('token/', views.EmailTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', jwt_views.TokenRefreshView.as_view(), name='token_refresh'),

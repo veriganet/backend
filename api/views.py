@@ -12,16 +12,16 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny, \
     IsAuthenticatedOrReadOnly
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, views
 from templated_email import send_templated_mail
 
 from api.permissions import IsOwner, IsUserOwner
-from api.models import Profile, Organization, BlockChain, BlockChainBuildDeploy, DroneCIServer
+from api.models import Profile, Organization, BlockChain, BlockChainBuildDeploy, DroneCIServer, Contact
 from api.serializers import CustomTokenObtainPairSerializer, UserSerializer, \
     RegisterSerializer, RegisterUserSerializer, ProfileSerializer, \
     OrganizationSerializer, BlockChainSerializer, UserUserSerializer, \
     UserProfileSerializer, BlockChainUserSerializer, OrganizationUserSerializer, \
-    BlockChainUserUpdatePatchSerializer, BlockChainBuildDeploySerializer, DroneCIServerSerializer
+    BlockChainUserUpdatePatchSerializer, BlockChainBuildDeploySerializer, DroneCIServerSerializer, ContactSerializer
 from api.utils import request_to_drone_ci
 from backend.settings import env
 
@@ -64,6 +64,7 @@ class APIRootView(APIView):
             'user/user': reverse('user_user_detail', request=request, format=format),
         }
         public_urls = {
+            'contact': reverse('contact', request=request, format=format),
             'register': reverse('register_user', request=request, format=format),
             'token': reverse('token_obtain_pair', request=request, format=format),
             'token/refresh': reverse('token_refresh', request=request, format=format),
@@ -817,6 +818,48 @@ class UserProfileViewSet(viewsets.ModelViewSet):
 #
 # public views
 #
+class ContactViewSet(viewsets.ModelViewSet):
+    """
+    Register new user
+
+    :email
+    :name
+    :phone
+    :message
+    """
+    serializer_class = ContactSerializer
+    permission_classes = [AllowAny]
+
+    def create(self, request, *args, **kwargs):
+        serializer = ContactSerializer(data=request.data)
+
+        if serializer.is_valid():
+            data = serializer.validated_data
+            serializer.email = data.get('email')
+            serializer.name = data.get('name')
+            serializer.phone = data.get('phone')
+            serializer.message = data.get('message')
+            serializer.is_valid(raise_exception=True)
+            contact = serializer.save()
+
+            contact = Contact.objects.get(id=contact.id)
+            current_site = get_current_site(request).domain
+
+            send_templated_mail(
+                template_name='contact',
+                from_email='contact@' + current_site,
+                recipient_list=['contact@veriga.net'],
+                fail_silently=False,
+                context={
+                    'email': contact.email,
+                    'name': contact.name,
+                    'phone': contact.phone,
+                    'message': contact.message,
+                }
+            )
+            return Response({"success": "Sent"})
+        return Response({"success": 'Failed'}, status=status.HTTP_400_BAD_REQUEST)
+
 
 class EmailTokenObtainPairView(TokenObtainPairView):
     """

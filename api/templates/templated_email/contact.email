@@ -1,0 +1,14 @@
+{% block subject %}Email from verigaNET Contact Form{% endblock %}
+{% block html %}
+  <p>Hello,</p>
+
+  <p>You have a message from contact form. Here are message details</p>
+  <p>
+      Name: {{ name }} <br/>
+      Email: {{ email }} <br/>
+      Phone: {{ phone }} <br/>
+  </p>
+  Message:
+  <p>{{ message }}</p>
+
+{% endblock %}

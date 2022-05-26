@@ -28,3 +28,4 @@ profiles:
               image.tag: V22.1
               ingress.host: api.veriga.net
               vault.role: backend
+              app.allowedHosts: "api.veriga.net"

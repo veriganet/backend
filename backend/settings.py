@@ -79,12 +79,14 @@ INSTALLED_APPS = [
     'django_rest_passwordreset',
     'api.apps.ApiConfig',
     'encrypted_model_fields',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -207,3 +209,9 @@ TEMPLATED_EMAIL_BACKEND = 'templated_email.backends.vanilla_django.TemplateBacke
 TEMPLATED_EMAIL_AUTO_PLAIN = True
 
 SITE_ID = 1
+
+CORS_ALLOWED_ORIGINS = [
+    "https://veriga.net",
+    "https://www.veriga.net",
+    "http://127.0.0.1:5000",
+]

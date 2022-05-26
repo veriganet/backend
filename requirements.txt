@@ -6,6 +6,7 @@ click==8.0.4
 cryptography==36.0.1
 Deprecated==1.2.13
 Django==3.2.8
+django-cors-headers==3.12.0
 django-encrypted-model-fields==0.6.1
 django-environ==0.8.1
 django-render-block==0.8.1

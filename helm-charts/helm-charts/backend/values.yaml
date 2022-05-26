@@ -14,11 +14,13 @@ app:
 image:
   repository: veriganet/backend
   tag: V22.1
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
 
 ingress:
   enabled: true
+  class: nginx
   host:
+
 
 service:
   type: ClusterIP
